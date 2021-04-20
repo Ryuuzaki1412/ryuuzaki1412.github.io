@@ -80,6 +80,14 @@ new Vue({
           source: "./mp3/9.mp3",
           url: "https://www.youtube.com/watch?v=L3wKzyIN1yk",
           favorited: false
+        },
+        {
+          name: "Think I'm In Love",
+          artist: "Rico",
+          cover: "./img/10.jpg",
+          source: "./mp3/think i'm in love.mp3",
+          url: "https://www.bilibili.com/video/av3913032",
+          favorited: false
         }
       ],
       currentTrack: null,
