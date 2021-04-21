@@ -22,7 +22,7 @@ new Vue({
           artist: "Rico",
           cover: "./img/2.jpg",
           source: "./mp3/think i'm in love.mp3",
-          url: "https://www.youtube.com/watch?v=L3wKzyIN1yk",
+          url: "https://www.bilibili.com/video/BV1is41197S6?from=search&seid=16417389837173237014",
           favorited: false
         }
       ],
