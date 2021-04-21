@@ -11,7 +11,7 @@ new Vue({
       tracks: [
         {
           name: "Promise by Harikiri ft.",
-          artist: "马思唯&Jay Park",
+          artist: "马思唯&朴宰范",
           cover: "./img/1.jpg",
           source: "./mp3/Promise by Harikiri ft.mp3",
           url: "https://www.bilibili.com/video/av886958095/",
