@@ -10,74 +10,18 @@ new Vue({
       isTimerPlaying: false,
       tracks: [
         {
-          name: "Mekanın Sahibi",
-          artist: "Norm Ender",
+          name: "Promise by Harikiri ft.",
+          artist: "马思唯&Jay Park",
           cover: "./img/1.jpg",
-          source: "./mp3/1.mp3",
-          url: "https://www.youtube.com/watch?v=z3wAjJXbYzA",
+          source: "./mp3/Promise by Harikiri ft.mp3",
+          url: "https://www.bilibili.com/video/av886958095/",
           favorited: false
         },
         {
-          name: "Everybody Knows",
-          artist: "Leonard Cohen",
+          name: "Think i'm in love",
+          artist: "Rico",
           cover: "./img/2.jpg",
-          source: "./mp3/2.mp3",
-          url: "https://www.youtube.com/watch?v=Lin-a2lTelg",
-          favorited: true
-        },
-        {
-          name: "Extreme Ways",
-          artist: "Moby",
-          cover: "./img/3.jpg",
-          source: "./mp3/3.mp3",
-          url: "https://www.youtube.com/watch?v=ICjyAe9S54c",
-          favorited: false
-        },
-        {
-          name: "Butterflies",
-          artist: "Sia",
-          cover: "./img/4.jpg",
-          source: "./mp3/4.mp3",
-          url: "https://www.youtube.com/watch?v=kYgGwWYOd9Y",
-          favorited: false
-        },
-        {
-          name: "The Final Victory",
-          artist: "Haggard",
-          cover: "./img/5.jpg",
-          source: "./mp3/5.mp3",
-          url: "https://www.youtube.com/watch?v=0WlpALnQdN8",
-          favorited: true
-        },
-        {
-          name: "Genius ft. Sia, Diplo, Labrinth",
-          artist: "LSD",
-          cover: "./img/6.jpg",
-          source: "./mp3/6.mp3",
-          url: "https://www.youtube.com/watch?v=HhoATZ1Imtw",
-          favorited: false
-        },
-        {
-          name: "The Comeback Kid",
-          artist: "Lindi Ortega",
-          cover: "./img/7.jpg",
-          source: "./mp3/7.mp3",
-          url: "https://www.youtube.com/watch?v=me6aoX0wCV8",
-          favorited: true
-        },
-        {
-          name: "Overdose",
-          artist: "Grandson",
-          cover: "./img/8.jpg",
-          source: "./mp3/8.mp3",
-          url: "https://www.youtube.com/watch?v=00-Rl3Jlx-o",
-          favorited: false
-        },
-        {
-          name: "Rag'n'Bone Man",
-          artist: "Human",
-          cover: "./img/9.jpg",
-          source: "./mp3/9.mp3",
+          source: "./mp3/think i'm in love.mp3",
           url: "https://www.youtube.com/watch?v=L3wKzyIN1yk",
           favorited: false
         }
