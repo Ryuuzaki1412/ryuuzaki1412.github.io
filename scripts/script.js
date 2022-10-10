@@ -32,6 +32,30 @@ new Vue({
           source: "./mp3/love me tender.mp3",
           url: "",
           favorited: false
+        },
+        {
+          name: "依靠",
+          artist: "高旗&超载乐队",
+          cover: "./img/4.jpg",
+          source: "./mp3/依靠.mp3",
+          url: "",
+          favorited: false
+        },
+        {
+          name: "Voila",
+          artist: "Françoise Hardy",
+          cover: "./img/5.jpg",
+          source: "./mp3/Voila.mp3",
+          url: "",
+          favorited: false
+        },
+        {
+          name: "28º À L'Ombre",
+          artist: "Jean-Francois Maurice",
+          cover: "./img/6.jpg",
+          source: "./mp3/28º À L'Ombre.mp3",
+          url: "",
+          favorited: false
         }
       ],
       currentTrack: null,
