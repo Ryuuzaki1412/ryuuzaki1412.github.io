@@ -32,7 +32,7 @@ new Vue({
           source: "./mp3/love me tender.mp3",
           url: "https://www.bilibili.com/video/BV1is41197S6?from=search&seid=16417389837173237014",
           favorited: false
-        },
+        }
       ],
       currentTrack: null,
       currentTrackIndex: 0,
