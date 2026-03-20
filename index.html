@@ -548,51 +548,41 @@ document.getElementById('downloadBtn').addEventListener('click',()=>{
 });
 
 // ── one-click import into Clash ───────────────────────────
-// Strategy:
-//  1. Write yaml to a data: URI Blob, then try clash:// / clash-verge:// scheme
-//  2. Both Clash for Windows and Clash Verge support:
-//     clash://install-config?url=<encoded_url>
-//     clash-verge://install-config?url=<encoded_url>
-//  3. Because local Blob URLs can't be fetched by the app, we create a
-//     temporary object URL, encode it, and attempt both protocol handlers.
-//  4. Fallback: open the "guide" tab and tell user to import manually.
+// Clash Verge / CFW support:  clash-verge://install-config?url=<url>
+//                              clash://install-config?url=<url>
+// The URL must be fetchable by the Clash process — blob: URLs are
+// browser-internal and cannot be fetched externally.
+// Solution: encode the YAML as a data: URI so the content travels
+// inside the URL itself, no remote fetch needed.
 document.getElementById('importBtn').addEventListener('click',async()=>{
   if(!currentYaml){showToast('请先生成配置');return}
 
-  // Always copy to clipboard first (useful for manual fallback)
+  // Copy to clipboard as fallback
   try{ await navigator.clipboard.writeText(currentYaml); }catch(_){}
 
-  // Build a temporary blob URL for the YAML
-  const blob=new Blob([currentYaml],{type:'application/x-yaml'});
-  const blobUrl=URL.createObjectURL(blob);
+  // Encode YAML as a data: URI — Clash Verge can read this directly
+  // We use base64 to safely handle all YAML characters
+  const b64=btoa(unescape(encodeURIComponent(currentYaml)));
+  const dataUri='data:text/plain;base64,'+b64;
+  const encodedData=encodeURIComponent(dataUri);
 
-  // Clash Verge supports clash-verge:// and clash://
-  // Clash for Windows supports clash://install-config?url=...
-  const encodedUrl=encodeURIComponent(blobUrl);
-
-  // Try Clash Verge first (newer, more common on Mac), then CFW
+  // Try Clash Verge protocol first, then generic clash://
   const schemes=[
-    'clash-verge://install-config?url='+encodedUrl,
-    'clash://install-config?url='+encodedUrl,
+    'clash-verge://install-config?url='+encodedData,
+    'clash://install-config?url='+encodedData,
   ];
 
-  // We open the first scheme; after a short delay open the second as fallback
-  // The one that matches the installed client will work, the other will silently fail
-  let opened=false;
+  // Use a hidden iframe trick to try both without navigating away
   for(const scheme of schemes){
-    try{
-      window.location.href=scheme;
-      opened=true;
-      break; // stop after first attempt — browser will handle it
-    }catch(_){}
+    const iframe=document.createElement('iframe');
+    iframe.style.display='none';
+    document.body.appendChild(iframe);
+    try{ iframe.src=scheme; }catch(_){}
+    setTimeout(()=>iframe.remove(),3000);
   }
 
-  // Update note text
   document.getElementById('importNote').textContent=
-    '已尝试唤起 Clash。若未自动打开，请点击"下载 YAML"后手动导入。';
-
-  // Revoke blob after 30 s
-  setTimeout(()=>URL.revokeObjectURL(blobUrl),30000);
+    '已尝试唤起 Clash。若未自动打开，请点击"下载 YAML"后在 Clash 中手动新建配置粘贴。';
 
   showToast('✓ 配置已复制，正在唤起 Clash…',3000);
 });
