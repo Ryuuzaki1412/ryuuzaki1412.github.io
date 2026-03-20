@@ -464,6 +464,7 @@ const CLAUDE_KEYWORDS=['api.anthropic','statsig.anthropic','anthropic.com','clau
 function mergeConfigs(originalYaml,exit_,relay,injectTun){
   let cfg;
   if(!originalYaml||!originalYaml.trim()){
+    // No existing config — generate a clean base config
     cfg={port:7890,'socks-port':7891,'allow-lan':false,mode:'rule','log-level':'info',
          proxies:[],  'proxy-groups':[], rules:['MATCH,DIRECT']};
   } else {
@@ -472,9 +473,12 @@ function mergeConfigs(originalYaml,exit_,relay,injectTun){
     if(!Array.isArray(cfg.proxies))         cfg.proxies=[];
     if(!Array.isArray(cfg['proxy-groups'])) cfg['proxy-groups']=[];
     if(!Array.isArray(cfg.rules))           cfg.rules=['MATCH,DIRECT'];
+    // ⚠️ Preserve original ports — never overwrite user's existing port settings
+    // cfg.port and cfg['socks-port'] are intentionally left untouched
   }
 
   if(injectTun){
+    // Only inject tun block, never touch port/socks-port
     cfg.tun={enable:true,stack:'system','auto-route':true,
              'auto-detect-interface':true,'dns-hijack':['any:53'],'strict-route':false};
     if(!cfg.dns)
