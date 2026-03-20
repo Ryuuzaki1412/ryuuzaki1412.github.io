@@ -117,9 +117,11 @@
   .action-row{display:flex;gap:7px;margin-bottom:14px}
 
   /* IMPORT BUTTON — full width, special style */
-  .btn-import{width:100%;padding:10px 16px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.81rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .12s;margin-bottom:6px}
-  .btn-import:hover{opacity:.88}.btn-import:active{transform:scale(.98)}
-  .btn-import-note{font-size:.67rem;color:var(--text-muted);text-align:center;line-height:1.5}
+  .import-steps-inline{margin-top:2px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+  .import-step-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--text-secondary);line-height:1.5}
+  .import-step-row:last-child{border-bottom:none}
+  .import-step-badge{width:18px;height:18px;border-radius:50%;background:var(--text-primary);color:white;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .import-step-text{flex:1}
 
   /* STATUS */
   .status-badge{display:none;align-items:center;gap:6px;font-size:.69rem;font-weight:500;padding:6px 11px;border-radius:100px;margin-top:7px}
@@ -351,24 +353,37 @@
             </button>
           </div>
 
-          <!-- import button -->
-          <button class="btn-import" id="importBtn">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h9M7 4l3 3-3 3" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 2h1a1 1 0 011 1v8a1 1 0 01-1 1h-1" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>
-            一键导入 Clash
-          </button>
-          <div class="btn-import-note" id="importNote">生成配置后即可一键导入 Clash Verge / Clash for Windows</div>
+          <!-- import guide -->
+          <div class="import-steps-inline">
+            <div class="import-step-row">
+              <div class="import-step-badge">1</div>
+              <div class="import-step-text">点击上方 <strong>下载 YAML</strong> 保存文件到本地</div>
+            </div>
+            <div class="import-step-row">
+              <div class="import-step-badge">2</div>
+              <div class="import-step-text">打开 <strong>Clash Verge</strong>，进入「配置」页面</div>
+            </div>
+            <div class="import-step-row">
+              <div class="import-step-badge">3</div>
+              <div class="import-step-text">将文件<strong>拖入</strong>配置列表，或点击「导入」选择文件，然后切换到该配置</div>
+            </div>
+            <div class="import-step-row">
+              <div class="import-step-badge">4</div>
+              <div class="import-step-text">「设置」→ 开启 <strong>TUN 模式</strong>，Claude Code 流量即走住宅 IP ✓</div>
+            </div>
+          </div>
         </div>
 
         <!-- GUIDE TAB -->
         <div class="tab-panel" id="tab-guide">
           <div class="section-label">导入步骤</div>
           <ul class="guide-steps">
-            <li><span class="gsn">1</span>点击"生成融合配置"，等待右侧 YAML 生成完成</li>
-            <li><span class="gsn">2</span>点击"<strong>一键导入 Clash</strong>"按钮，自动唤起 Clash 客户端并导入</li>
-            <li><span class="gsn">3</span>如自动导入失败，点击"下载 YAML"，在 Clash 中手动新建配置粘贴</li>
-            <li><span class="gsn">4</span>切换到该配置，在代理页确认 <code class="pill">claude-chain</code> 代理组存在</li>
-            <li><span class="gsn">5</span><strong>Clash 设置 → TUN 模式 → 开启</strong>（Clash Verge 还需开启「服务模式」）</li>
-            <li><span class="gsn">6</span>打开终端运行 Claude Code，此时出口 IP 为住宅 IP ✓</li>
+            <li><span class="gsn">1</span>填写住宅 IP 信息，点击"生成融合配置"</li>
+            <li><span class="gsn">2</span>点击 <strong>下载 YAML</strong>，保存 <code class="pill">proxy_fusion_config.yaml</code> 到本地</li>
+            <li><span class="gsn">3</span>打开 Clash Verge → 配置，将文件<strong>拖入</strong>配置列表（或点击「导入」）</li>
+            <li><span class="gsn">4</span>切换到该配置，确认 <code class="pill">claude-chain</code> 代理组存在</li>
+            <li><span class="gsn">5</span>Clash Verge → 设置 → <strong>TUN 模式 → 开启</strong>（同时开启「服务模式」）</li>
+            <li><span class="gsn">6</span>运行 Claude Code，出口 IP 即为住宅 IP ✓</li>
           </ul>
 
           <div class="guide-tip">
@@ -547,47 +562,74 @@ document.getElementById('downloadBtn').addEventListener('click',()=>{
   showToast('✓ 已下载配置文件');
 });
 
+
+
 // ── one-click import into Clash ───────────────────────────
-// Clash Verge / CFW support:  clash-verge://install-config?url=<url>
-//                              clash://install-config?url=<url>
-// The URL must be fetchable by the Clash process — blob: URLs are
-// browser-internal and cannot be fetched externally.
-// Solution: encode the YAML as a data: URI so the content travels
-// inside the URL itself, no remote fetch needed.
-document.getElementById('importBtn').addEventListener('click',async()=>{
-  if(!currentYaml){showToast('请先生成配置');return}
+// Clash Verge only accepts a real HTTPS URL it can fetch.
+// We POST the YAML to dpaste.com (free paste API, no auth required),
+// get a public raw URL, then trigger clash-verge:// / clash://
+document.getElementById('importBtn').addEventListener('click', async () => {
+  if (!currentYaml) { showToast('请先生成配置'); return; }
 
-  // Copy to clipboard as fallback
-  try{ await navigator.clipboard.writeText(currentYaml); }catch(_){}
+  try { await navigator.clipboard.writeText(currentYaml); } catch(_) {}
 
-  // Encode YAML as a data: URI — Clash Verge can read this directly
-  // We use base64 to safely handle all YAML characters
-  const b64=btoa(unescape(encodeURIComponent(currentYaml)));
-  const dataUri='data:text/plain;base64,'+b64;
-  const encodedData=encodeURIComponent(dataUri);
+  const btn  = document.getElementById('importBtn');
+  const note = document.getElementById('importNote');
 
-  // Try Clash Verge protocol first, then generic clash://
-  const schemes=[
-    'clash-verge://install-config?url='+encodedData,
-    'clash://install-config?url='+encodedData,
-  ];
+  btn.disabled = true;
+  btn.textContent = '正在生成导入链接…';
+  note.textContent = '正在上传配置到临时链接，请稍候…';
 
-  // Use a hidden iframe trick to try both without navigating away
-  for(const scheme of schemes){
-    const iframe=document.createElement('iframe');
-    iframe.style.display='none';
-    document.body.appendChild(iframe);
-    try{ iframe.src=scheme; }catch(_){}
-    setTimeout(()=>iframe.remove(),3000);
+  let publicUrl = null;
+
+  // Attempt 1: dpaste.com
+  try {
+    const fd = new FormData();
+    fd.append('content',     currentYaml);
+    fd.append('syntax',      'yaml');
+    fd.append('expiry_days', '1');
+    const res = await fetch('https://dpaste.com/api/v2/', { method: 'POST', body: fd });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.url) publicUrl = json.url.replace(/\/$/, '') + '/raw/';
+    }
+  } catch(_) {}
+
+  // Attempt 2: 0x0.st
+  if (!publicUrl) {
+    try {
+      const fd2 = new FormData();
+      fd2.append('file', new Blob([currentYaml], { type: 'text/plain' }), 'config.yaml');
+      const res2 = await fetch('https://0x0.st', { method: 'POST', body: fd2 });
+      if (res2.ok) publicUrl = (await res2.text()).trim();
+    } catch(_) {}
   }
 
-  document.getElementById('importNote').textContent=
-    '已尝试唤起 Clash。若未自动打开，请点击"下载 YAML"后在 Clash 中手动新建配置粘贴。';
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h9M7 4l3 3-3 3" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 2h1a1 1 0 011 1v8a1 1 0 01-1 1h-1" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg> 一键导入 Clash';
 
-  showToast('✓ 配置已复制，正在唤起 Clash…',3000);
+  if (!publicUrl) {
+    note.textContent = '网络受限无法自动上传。请点击"下载 YAML"，在 Clash 中手动新建配置粘贴。';
+    showToast('上传失败，已复制到剪贴板，请手动导入', 3000);
+    return;
+  }
+
+  const enc = encodeURIComponent(publicUrl);
+  ['clash-verge://install-config?url=' + enc,
+   'clash://install-config?url='        + enc
+  ].forEach(scheme => {
+    const f = document.createElement('iframe');
+    f.style.display = 'none';
+    document.body.appendChild(f);
+    f.src = scheme;
+    setTimeout(() => f.remove(), 5000);
+  });
+
+  note.textContent = '已唤起 Clash，临时链接有效期 24 小时。若未自动打开，请点击下载后手动导入。';
+  showToast('正在唤起 Clash 导入…', 3000);
 });
 
-document.getElementById('exitServer').addEventListener('input',()=>setStep(3));
+document.getElementById('exitServer').addEventListener('input', () => setStep(3));
 </script>
 </body>
 </html>
