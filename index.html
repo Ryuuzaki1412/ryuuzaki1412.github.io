@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ProxyFusion — Claude Code 住宅IP链式代理</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProxyFusion — Claude Code 住宅IP代理</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
@@ -13,7 +13,8 @@
     --text-primary:#0d0d0c;--text-secondary:#6b6b68;--text-muted:#a0a09c;
     --accent-soft:#f0f0ee;--blue:#2563eb;--blue-soft:#eff6ff;
     --green:#16a34a;--green-soft:#f0fdf4;--amber:#d97706;--amber-soft:#fffbeb;
-    --red:#dc2626;--radius:16px;--radius-sm:10px;
+    --red:#dc2626;--purple:#7c3aed;--purple-soft:#f5f3ff;
+    --radius:16px;--radius-sm:10px;
     --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
     --shadow-md:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
   }
@@ -28,46 +29,51 @@
   .nav-links{display:flex;align-items:center;gap:6px}
   .nav-link{font-size:.85rem;color:var(--text-secondary);font-weight:500;text-decoration:none;padding:6px 12px;border-radius:8px;transition:background .15s,color .15s}
   .nav-link:hover{background:var(--accent-soft);color:var(--text-primary)}
-  .btn-nav{font-size:.85rem;font-weight:600;color:white;background:var(--text-primary);border:none;cursor:pointer;padding:7px 16px;border-radius:8px;transition:opacity .15s;font-family:'Sora',sans-serif}
-  .btn-nav:hover{opacity:.82}
+  .btn-nav{font-size:.85rem;font-weight:600;color:white;background:var(--text-primary);border:none;cursor:pointer;padding:7px 16px;border-radius:8px;font-family:'Sora',sans-serif}
 
   /* HERO */
-  .hero{text-align:center;padding:60px 2rem 44px;max-width:640px;margin:0 auto}
+  .hero{text-align:center;padding:56px 2rem 40px;max-width:640px;margin:0 auto}
   .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:5px 14px;font-size:.75rem;color:var(--text-secondary);font-weight:500;margin-bottom:20px;animation:fadeUp .4s ease both}
   .badge-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
   @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
-  .hero h1{font-size:clamp(1.75rem,4.5vw,2.6rem);font-weight:700;line-height:1.15;letter-spacing:-.03em;margin-bottom:12px;animation:fadeUp .4s .05s ease both}
+  .hero h1{font-size:clamp(1.75rem,4.5vw,2.5rem);font-weight:700;line-height:1.15;letter-spacing:-.03em;margin-bottom:12px;animation:fadeUp .4s .05s ease both}
   .hero h1 em{font-style:normal;color:var(--text-secondary)}
-  .hero p{font-size:.93rem;color:var(--text-secondary);line-height:1.7;max-width:440px;margin:0 auto;animation:fadeUp .4s .1s ease both}
+  .hero p{font-size:.92rem;color:var(--text-secondary);line-height:1.7;max-width:440px;margin:0 auto;animation:fadeUp .4s .1s ease both}
   @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-  /* STEPS */
-  .steps-bar{display:flex;align-items:center;justify-content:center;margin:28px 0 36px;flex-wrap:wrap;animation:fadeUp .4s .15s ease both}
-  .step-item{display:flex;align-items:center;gap:7px;font-size:.76rem;font-weight:500;color:var(--text-muted);padding:6px 13px;border-radius:8px;transition:all .15s}
-  .step-item.active{color:var(--text-primary);background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
-  .step-item.done{color:var(--green)}
-  .step-num{width:18px;height:18px;border-radius:50%;background:var(--border);color:var(--text-muted);font-size:.63rem;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
-  .step-item.active .step-num{background:var(--text-primary);color:white}
-  .step-item.done .step-num{background:var(--green);color:white}
-  .step-divider{width:18px;height:1px;background:var(--border);flex-shrink:0}
-
-  /* PREREQ */
-  .prereq-wrap{max-width:1140px;margin:0 auto 18px;padding:0 2rem;animation:fadeUp .4s .17s ease both}
-  .prereq-card{background:var(--amber-soft);border:1px solid #fcd34d;border-radius:var(--radius);padding:16px 20px}
-  .prereq-title{font-size:.8rem;font-weight:600;color:var(--amber);display:flex;align-items:center;gap:7px;margin-bottom:10px}
-  .prereq-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
-  .prereq-item{display:flex;align-items:flex-start;gap:8px;font-size:.73rem;color:#92400e;line-height:1.5}
-  .prereq-check{width:15px;height:15px;border-radius:4px;background:white;border:1.5px solid #fbbf24;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-  .prereq-check svg{width:8px;height:8px}
+  /* MODE SELECTOR */
+  .mode-wrap{max-width:760px;margin:28px auto 36px;padding:0 2rem;animation:fadeUp .4s .12s ease both}
+  .mode-label{font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;text-align:center;margin-bottom:12px}
+  .mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mode-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:16px 18px;cursor:pointer;transition:all .18s;display:flex;gap:12px;align-items:flex-start}
+  .mode-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow)}
+  .mode-card.active{border-color:var(--text-primary);box-shadow:var(--shadow-md)}
+  .mode-card.active.clash{border-color:var(--blue);background:var(--blue-soft)}
+  .mode-card.active.direct{border-color:var(--purple);background:var(--purple-soft)}
+  .mode-card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem}
+  .mode-card.clash .mode-card-icon{background:#dbeafe}
+  .mode-card.direct .mode-card-icon{background:#ede9fe}
+  .mode-card-body{}
+  .mode-card-title{font-size:.84rem;font-weight:600;margin-bottom:3px}
+  .mode-card-desc{font-size:.71rem;color:var(--text-secondary);line-height:1.5}
+  .mode-card.active.clash .mode-card-title{color:var(--blue)}
+  .mode-card.active.direct .mode-card-title{color:var(--purple)}
 
   /* MAIN */
   .main{max-width:1140px;margin:0 auto;padding:0 2rem 80px}
-  .columns{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:18px;align-items:start}
+
+  /* CLASH MODE layout */
+  .clash-layout{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:18px;align-items:start}
+
+  /* DIRECT MODE layout */
+  .direct-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;max-width:800px;margin:0 auto}
+
+  .layout-panel{display:none}
+  .layout-panel.active{display:block}
 
   /* CARD */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .4s .2s ease both;transition:box-shadow .2s}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .35s ease both;transition:box-shadow .2s}
   .card:hover{box-shadow:var(--shadow-md)}
-  .card:nth-child(2){animation-delay:.24s}.card:nth-child(3){animation-delay:.28s}
   .card-top{padding:16px 20px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
   .card-icon{width:30px;height:30px;border-radius:8px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .card-icon svg{width:14px;height:14px}
@@ -77,12 +83,11 @@
 
   /* FORM */
   .field{margin-bottom:11px}
-  .field label{display:block;font-size:.71rem;font-weight:500;color:var(--text-secondary);margin-bottom:5px;letter-spacing:.01em}
-  .field input,.field select,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.79rem;color:var(--text-primary);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none;-webkit-appearance:none}
+  .field label{display:block;font-size:.71rem;font-weight:500;color:var(--text-secondary);margin-bottom:5px}
+  .field input,.field select,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.8rem;color:var(--text-primary);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none;-webkit-appearance:none}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--text-primary);box-shadow:0 0 0 3px rgba(13,13,12,.07);background:white}
   .field input::placeholder,.field textarea::placeholder{color:var(--text-muted);font-size:.74rem}
-  .field textarea{font-family:'JetBrains Mono',monospace;font-size:.69rem;resize:vertical;min-height:118px;line-height:1.65}
-  .field select{cursor:pointer}
+  .field textarea{font-family:'JetBrains Mono',monospace;font-size:.69rem;resize:vertical;min-height:110px;line-height:1.65}
   .field-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
   .toggle-row{display:flex;align-items:center;gap:10px;padding:7px 0}
   .toggle{position:relative;width:34px;height:19px;flex-shrink:0;cursor:pointer}
@@ -92,36 +97,17 @@
   .toggle input:checked~.toggle-track{background:var(--text-primary)}
   .toggle input:checked~.toggle-thumb{transform:translateX(15px)}
   .toggle-label{font-size:.75rem;font-weight:500;color:var(--text-secondary);cursor:pointer;line-height:1.4}
-  .divider{border:none;border-top:1px solid var(--border);margin:13px 0}
-
+  .divider{border:none;border-top:1px solid var(--border);margin:12px 0}
   .info-note{background:var(--blue-soft);border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:8px 10px;display:flex;gap:7px;align-items:flex-start;font-size:.69rem;color:#1d4ed8;line-height:1.55;margin-top:9px}
   .info-note svg{flex-shrink:0;margin-top:1px}
 
   /* BUTTONS */
   .btn-primary{width:100%;padding:10px 16px;background:var(--text-primary);color:white;border:none;border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.81rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s,transform .12s;margin-top:4px}
   .btn-primary:hover{opacity:.85}.btn-primary:active{transform:scale(.98)}
-  .btn-secondary{flex:1;padding:8px 10px;background:var(--surface);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.74rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s,border-color .15s}
-  .btn-secondary:hover{background:var(--accent-soft);border-color:var(--border-strong)}
+  .btn-secondary{flex:1;padding:8px 10px;background:var(--surface);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.74rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s}
+  .btn-secondary:hover{background:var(--accent-soft)}
   .btn-secondary svg{width:12px;height:12px}
-
-  /* YAML */
-  .yaml-wrap{background:#0d1117;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:11px;border:1px solid #21262d}
-  .yaml-header{background:#161b22;padding:7px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #21262d}
-  .yaml-label{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:#8b949e;font-weight:500;display:flex;align-items:center;gap:5px}
-  .yd-wrap{display:flex;gap:4px;align-items:center}
-  .yd{width:8px;height:8px;border-radius:50%}
-  .yd.r{background:#ff5f57}.yd.y{background:#ffbd2e}.yd.g{background:#28c840}
-  .yaml-body{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:#c9d1d9;padding:12px;max-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;line-height:1.65}
-  .yaml-body::-webkit-scrollbar{width:4px}.yaml-body::-webkit-scrollbar-track{background:transparent}.yaml-body::-webkit-scrollbar-thumb{background:#30363d;border-radius:2px}
-  .yaml-empty{color:#484f58;font-style:italic}
-  .action-row{display:flex;gap:7px;margin-bottom:14px}
-
-  /* IMPORT BUTTON — full width, special style */
-  .import-steps-inline{margin-top:2px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
-  .import-step-row{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-bottom:1px solid var(--border);font-size:.72rem;color:var(--text-secondary);line-height:1.5}
-  .import-step-row:last-child{border-bottom:none}
-  .import-step-badge{width:18px;height:18px;border-radius:50%;background:var(--text-primary);color:white;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-  .import-step-text{flex:1}
+  .action-row{display:flex;gap:7px;margin-bottom:12px}
 
   /* STATUS */
   .status-badge{display:none;align-items:center;gap:6px;font-size:.69rem;font-weight:500;padding:6px 11px;border-radius:100px;margin-top:7px}
@@ -134,14 +120,25 @@
   .file-drop input{display:none}
   .file-drop-text{font-size:.69rem;color:var(--text-muted);margin-top:3px}
 
-  /* TABS (2 tabs only) */
+  /* YAML PREVIEW */
+  .yaml-wrap{background:#0d1117;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:11px;border:1px solid #21262d}
+  .yaml-header{background:#161b22;padding:7px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #21262d}
+  .yaml-label{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:#8b949e;display:flex;align-items:center;gap:5px}
+  .yd-wrap{display:flex;gap:4px}
+  .yd{width:8px;height:8px;border-radius:50%}
+  .yd.r{background:#ff5f57}.yd.y{background:#ffbd2e}.yd.g{background:#28c840}
+  .yaml-body{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:#c9d1d9;padding:12px;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;line-height:1.65}
+  .yaml-body::-webkit-scrollbar{width:4px}.yaml-body::-webkit-scrollbar-thumb{background:#30363d;border-radius:2px}
+  .yaml-empty{color:#484f58;font-style:italic}
+
+  /* TABS */
   .tab-bar{display:flex;gap:4px;background:var(--accent-soft);border-radius:8px;padding:3px;margin-bottom:13px}
-  .tab-btn{flex:1;padding:6px 8px;border:none;background:transparent;border-radius:6px;font-family:'Sora',sans-serif;font-size:.72rem;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+  .tab-btn{flex:1;padding:6px 8px;border:none;background:transparent;border-radius:6px;font-family:'Sora',sans-serif;font-size:.71rem;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .15s}
   .tab-btn.active{background:white;color:var(--text-primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}
   .tab-panel{display:none}.tab-panel.active{display:block}
 
   /* GUIDE */
-  .section-label{font-size:.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px}
+  .section-label{font-size:.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
   .guide-steps{list-style:none}
   .guide-steps li{display:flex;gap:8px;align-items:flex-start;font-size:.71rem;color:var(--text-secondary);padding:6px 0;border-bottom:1px solid var(--border);line-height:1.55}
   .guide-steps li:last-child{border-bottom:none}
@@ -149,6 +146,24 @@
   code.pill{background:var(--accent-soft);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.64rem}
   .guide-tip{background:var(--green-soft);border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:8px 10px;font-size:.69rem;color:#166534;line-height:1.55;margin-top:10px;display:flex;gap:7px;align-items:flex-start}
   .guide-tip svg{flex-shrink:0;margin-top:1px}
+
+  /* DRAG GUIDE */
+  .drag-guide{background:var(--accent-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:4px}
+  .drag-guide-step{display:flex;align-items:flex-start;gap:10px;font-size:.75rem;color:var(--text-secondary);line-height:1.5}
+  .drag-guide-num{width:20px;height:20px;border-radius:50%;background:var(--text-primary);color:white;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+  .drag-guide-arrow{text-align:center;font-size:.85rem;color:var(--text-muted);padding:4px 0 4px 30px}
+
+  /* COMMAND BOX (direct mode) */
+  .cmd-box{background:#0d1117;border:1px solid #21262d;border-radius:var(--radius-sm);overflow:hidden;margin-top:10px}
+  .cmd-header{background:#161b22;padding:7px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #21262d}
+  .cmd-label{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:#8b949e}
+  .cmd-copy{background:#21262d;border:none;color:#8b949e;font-size:.62rem;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;cursor:pointer;transition:background .15s}
+  .cmd-copy:hover{background:#30363d;color:#c9d1d9}
+  .cmd-body{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#c9d1d9;padding:14px;line-height:1.9;white-space:pre}
+  .cmd-key{color:#79c0ff}
+  .cmd-val{color:#a5d6ff}
+  .cmd-comment{color:#484f58}
+  .cmd-empty{color:#484f58;font-style:italic;font-size:.67rem}
 
   /* DOMAIN LIST */
   .domain-block{background:#0d1117;border:1px solid #21262d;border-radius:var(--radius-sm);padding:10px 12px;margin-top:8px}
@@ -158,19 +173,14 @@
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--text-primary);color:white;padding:9px 18px;border-radius:100px;font-size:.77rem;font-weight:500;opacity:0;pointer-events:none;transition:all .22s;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.2)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  @media(max-width:920px){.columns{grid-template-columns:1fr}.prereq-grid{grid-template-columns:1fr 1fr}.hero{padding:40px 1.5rem 30px}nav{padding:0 1rem}.main,.prereq-wrap{padding-left:1rem;padding-right:1rem}}
-  @media(max-width:480px){.prereq-grid{grid-template-columns:1fr}.steps-bar{display:none}}
-
-  .btn-import{width:100%;padding:10px 16px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.81rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .12s;margin-bottom:6px}
-  .btn-import:hover{opacity:.88}.btn-import:active{transform:scale(.98)}
-  .btn-import:disabled{opacity:.55;cursor:not-allowed}
-  .btn-import-note{font-size:.67rem;color:var(--text-muted);text-align:center;line-height:1.5}
-
-  .drag-guide{background:var(--accent-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:4px}
-  .drag-guide-step{display:flex;align-items:flex-start;gap:10px;font-size:.75rem;color:var(--text-secondary);line-height:1.5}
-  .drag-guide-num{width:20px;height:20px;border-radius:50%;background:var(--text-primary);color:white;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
-  .drag-guide-arrow{text-align:center;font-size:.85rem;color:var(--text-muted);padding:4px 0 4px 30px}
-  .drag-guide-text strong{color:var(--text-primary)}
+  @media(max-width:900px){
+    .clash-layout{grid-template-columns:1fr}
+    .direct-layout{grid-template-columns:1fr}
+    .mode-cards{grid-template-columns:1fr}
+    .hero{padding:40px 1.5rem 28px}
+    nav{padding:0 1rem}
+    .main,.mode-wrap{padding-left:1rem;padding-right:1rem}
+  }
 </style>
 </head>
 <body>
@@ -189,229 +199,235 @@
 </nav>
 
 <div class="hero">
-  <div class="hero-badge"><div class="badge-dot"></div>专为 Claude Code 设计</div>
-  <h1>让 Claude Code 走<br><em>你的住宅 IP 出口</em></h1>
-  <p>融合机场配置与住宅 IP，一键生成 YAML，导入 Clash 后 <code class="pill">api.anthropic.com</code> 流量自动走住宅 IP。</p>
+  <div class="hero-badge"><div class="badge-dot"></div>住宅IP · 防封号 · Claude Code</div>
+  <h1>让 Claude Code<br><em>走你的住宅 IP 出口</em></h1>
+  <p>购买住宅 IP 后，选择你的使用方式，一步生成配置或命令，Anthropic 看到的永远是真实住宅 IP。</p>
 </div>
 
-<div class="steps-bar">
-  <div class="step-item active" id="step1"><span class="step-num">1</span>前置检查</div>
-  <div class="step-divider"></div>
-  <div class="step-item" id="step2"><span class="step-num">2</span>导入配置</div>
-  <div class="step-divider"></div>
-  <div class="step-item" id="step3"><span class="step-num">3</span>填写代理</div>
-  <div class="step-divider"></div>
-  <div class="step-item" id="step4"><span class="step-num">4</span>生成 &amp; 导入</div>
-</div>
-
-<div class="prereq-wrap">
-  <div class="prereq-card">
-    <div class="prereq-title">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1L12 10H1L6.5 1z" stroke="#d97706" stroke-width="1.2" stroke-linejoin="round"/><path d="M6.5 5v2.5M6.5 9v.5" stroke="#d97706" stroke-width="1.2" stroke-linecap="round"/></svg>
-      使用前，请确认以下条件已满足
+<!-- MODE SELECTOR -->
+<div class="mode-wrap">
+  <div class="mode-label">选择你的使用方式</div>
+  <div class="mode-cards">
+    <div class="mode-card clash active" id="modeClash" onclick="switchMode('clash')">
+      <div class="mode-card-icon">🛡️</div>
+      <div class="mode-card-body">
+        <div class="mode-card-title">配合 Clash 使用</div>
+        <div class="mode-card-desc">已有机场 + Clash Verge，生成融合 YAML 导入即用。住宅 IP 协议：<strong>SOCKS5</strong></div>
+      </div>
     </div>
-    <div class="prereq-grid">
-      <div class="prereq-item">
-        <div class="prereq-check"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4L3 6L7 2" stroke="#d97706" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        已安装 Clash Verge / Clash for Windows，机场节点可正常使用
-      </div>
-      <div class="prereq-item">
-        <div class="prereq-check"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4L3 6L7 2" stroke="#d97706" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        已购买住宅 IP 代理，获得服务器地址 + 端口（含账密）
-      </div>
-      <div class="prereq-item">
-        <div class="prereq-check"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4L3 6L7 2" stroke="#d97706" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <span>Clash 已开启 <strong>TUN 模式</strong>，否则 Claude Code CLI 不走代理</span>
-      </div>
-      <div class="prereq-item">
-        <div class="prereq-check"><svg viewBox="0 0 8 8" fill="none"><path d="M1 4L3 6L7 2" stroke="#d97706" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        已从 Clash 导出现有配置 YAML（可选，没有也可生成基础版）
+    <div class="mode-card direct" id="modeDirect" onclick="switchMode('direct')">
+      <div class="mode-card-icon">⚡</div>
+      <div class="mode-card-body">
+        <div class="mode-card-title">直接在终端使用</div>
+        <div class="mode-card-desc">无需 Clash，生成一行命令写入终端配置，直接 <code class="pill">claude</code> 即可。住宅 IP 协议：<strong>HTTP/HTTPS</strong></div>
       </div>
     </div>
   </div>
 </div>
 
 <div class="main">
-  <div class="columns">
 
-    <!-- COL 1 -->
-    <div class="card">
-      <div class="card-top">
-        <div class="card-icon">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M1.5 12h11" stroke="#0d0d0c" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <!-- ══════════ CLASH MODE ══════════ -->
+  <div class="layout-panel active" id="panelClash">
+    <div class="clash-layout">
+
+      <!-- COL 1: existing config -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M1.5 12h11" stroke="#0d0d0c" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><div class="card-title">1. 导入现有 Clash 配置</div><div class="card-sub">保留你的机场节点和全部规则</div></div>
         </div>
-        <div><div class="card-title">1. 导入现有 Clash 配置</div><div class="card-sub">保留原有机场节点和所有规则</div></div>
-      </div>
-      <div class="card-body">
-        <div class="field">
-          <label>粘贴 YAML 配置内容</label>
-          <textarea id="existingConfig" placeholder="# 粘贴你的完整 Clash 配置&#10;# Clash Verge → 配置 → 右键 → 编辑&#10;&#10;port: 7890&#10;proxies:&#10;  - name: &quot;机场节点&quot;&#10;    ..."></textarea>
-        </div>
-        <div class="field">
-          <label>或上传 .yaml 文件</label>
-          <div class="file-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <div style="font-size:1.1rem">📄</div>
-            <input type="file" id="fileInput" accept=".yaml,.yml,.txt">
-            <div style="font-size:.74rem;margin-top:3px">点击或拖拽上传</div>
-            <div class="file-drop-text" id="fileName">未选择文件</div>
+        <div class="card-body">
+          <div class="field">
+            <label>粘贴 YAML 配置内容</label>
+            <textarea id="existingConfig" placeholder="# 粘贴你的完整 Clash 配置&#10;# Clash Verge → 配置 → 右键 → 编辑&#10;&#10;port: 7890&#10;proxies:&#10;  - name: &quot;机场节点&quot;&#10;    ..."></textarea>
+          </div>
+          <div class="field">
+            <label>或上传 .yaml 文件</label>
+            <div class="file-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
+              <div style="font-size:1.1rem">📄</div>
+              <input type="file" id="fileInput" accept=".yaml,.yml,.txt">
+              <div style="font-size:.74rem;margin-top:3px">点击或拖拽上传</div>
+              <div class="file-drop-text" id="fileName">未选择文件</div>
+            </div>
+          </div>
+          <div class="info-note">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#2563eb" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/></svg>
+            无现有配置可跳过，自动生成只含住宅 IP 规则的基础配置
           </div>
         </div>
-        <div class="info-note">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#2563eb" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/></svg>
-          无现有配置可跳过，将自动生成只含住宅 IP 规则的基础配置
-        </div>
       </div>
-    </div>
 
-    <!-- COL 2 -->
-    <div class="card">
-      <div class="card-top">
-        <div class="card-icon">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M7 1C4.24 1 2 3.24 2 6c0 1.9 1.05 3.56 2.6 4.43L7 13l2.4-2.57C10.95 9.56 12 7.9 12 6c0-2.76-2.24-5-5-5z" stroke="#0d0d0c" stroke-width="1.3"/><circle cx="7" cy="6" r="1.5" stroke="#0d0d0c" stroke-width="1.3"/></svg>
+      <!-- COL 2: proxy info -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><path d="M7 1C4.24 1 2 3.24 2 6c0 1.9 1.05 3.56 2.6 4.43L7 13l2.4-2.57C10.95 9.56 12 7.9 12 6c0-2.76-2.24-5-5-5z" stroke="#0d0d0c" stroke-width="1.3"/><circle cx="7" cy="6" r="1.5" stroke="#0d0d0c" stroke-width="1.3"/></svg></div>
+          <div><div class="card-title">2. 住宅 IP 信息（SOCKS5）</div><div class="card-sub">填入购买后获得的连接参数</div></div>
         </div>
-        <div><div class="card-title">2. 住宅 IP 代理信息</div><div class="card-sub">填入购买的出口节点参数</div></div>
-      </div>
-      <div class="card-body">
-        <div class="field">
-          <label>代理协议</label>
-          <select id="exitType">
-            <option value="socks5">SOCKS5（推荐）</option>
-            <option value="http">HTTP</option>
-          </select>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>服务器地址</label><input type="text" id="exitServer" placeholder="IP 或域名"></div>
-          <div class="field"><label>端口</label><input type="number" id="exitPort" placeholder="1080"></div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label>用户名（可选）</label><input type="text" id="exitUser" placeholder="username" autocomplete="off"></div>
-          <div class="field"><label>密码（可选）</label><input type="password" id="exitPass" placeholder="password" autocomplete="off"></div>
-        </div>
-
-        <hr class="divider">
-
-        <div class="toggle-row">
-          <label class="toggle"><input type="checkbox" id="enableRelay"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-          <span class="toggle-label">启用中转加速节点（可选）</span>
-        </div>
-        <div id="relayBlock" style="display:none">
-          <div class="field" style="margin-top:4px"><label>中转协议</label><select id="relayType"><option value="socks5">SOCKS5</option><option value="http">HTTP</option><option value="vmess">VMess</option></select></div>
+        <div class="card-body">
           <div class="field-row">
-            <div class="field"><label>中转地址</label><input type="text" id="relayServer" placeholder="relay.example.com"></div>
-            <div class="field"><label>端口</label><input type="number" id="relayPort" placeholder="443"></div>
+            <div class="field"><label>服务器地址</label><input type="text" id="c_server" placeholder="IP 或域名"></div>
+            <div class="field"><label>端口</label><input type="number" id="c_port" placeholder="1080"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>用户名</label><input type="text" id="relayUser" placeholder="（可选）" autocomplete="off"></div>
-            <div class="field"><label>密码</label><input type="password" id="relayPass" placeholder="（可选）" autocomplete="off"></div>
+            <div class="field"><label>用户名（可选）</label><input type="text" id="c_user" placeholder="username" autocomplete="off"></div>
+            <div class="field"><label>密码（可选）</label><input type="password" id="c_pass" placeholder="password" autocomplete="off"></div>
           </div>
-        </div>
 
-        <div class="toggle-row">
-          <label class="toggle"><input type="checkbox" id="enableTun" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-          <span class="toggle-label">在 YAML 中注入 TUN 模式配置（推荐）</span>
-        </div>
+          <div class="toggle-row" style="margin-top:4px">
+            <label class="toggle"><input type="checkbox" id="enableTun" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+            <span class="toggle-label">在 YAML 中注入 TUN 模式配置</span>
+          </div>
 
-        <button class="btn-primary" id="generateBtn">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          生成融合配置
-        </button>
-        <div class="status-badge" id="statusBadge"></div>
+          <div class="info-note" style="margin-top:2px;background:var(--green-soft);border-color:#bbf7d0;color:#166534">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>导入 YAML 后，在 Clash Verge 开启<strong>「虚拟网卡模式（TUN）」</strong>，之后直接输 <code class="pill" style="background:rgba(0,0,0,.08)">claude</code> 即走住宅 IP，无需任何额外设置。</span>
+          </div>
+
+          <button class="btn-primary" id="generateBtn" style="margin-top:14px">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            生成融合配置
+          </button>
+          <div class="status-badge" id="clashStatus"></div>
+        </div>
       </div>
-    </div>
 
-    <!-- COL 3 -->
-    <div class="card">
-      <div class="card-top">
-        <div class="card-icon">
-          <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="1.5" width="10" height="11" rx="2" stroke="#0d0d0c" stroke-width="1.3"/><path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="#0d0d0c" stroke-width="1.1" stroke-linecap="round"/></svg>
+      <!-- COL 3: result -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><rect x="2" y="1.5" width="10" height="11" rx="2" stroke="#0d0d0c" stroke-width="1.3"/><path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="#0d0d0c" stroke-width="1.1" stroke-linecap="round"/></svg></div>
+          <div><div class="card-title">3. 融合结果</div><div class="card-sub">下载 YAML 拖入 Clash 完成导入</div></div>
         </div>
-        <div><div class="card-title">3. 融合结果 &amp; 导入</div><div class="card-sub">下载配置并导入 Clash</div></div>
-      </div>
-      <div class="card-body">
+        <div class="card-body">
+          <div class="tab-bar">
+            <button class="tab-btn active" data-tab="cyaml">YAML 配置</button>
+            <button class="tab-btn" data-tab="cguide">使用说明</button>
+          </div>
 
-        <div class="tab-bar">
-          <button class="tab-btn active" data-tab="yaml">YAML 配置</button>
-          <button class="tab-btn" data-tab="guide">使用说明</button>
-        </div>
-
-        <!-- YAML TAB -->
-        <div class="tab-panel active" id="tab-yaml">
-          <div class="yaml-wrap">
-            <div class="yaml-header">
-              <div class="yd-wrap"><div class="yd r"></div><div class="yd y"></div><div class="yd g"></div></div>
-              <div class="yaml-label">
-                <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><rect x=".5" y=".5" width="8" height="8" rx="1" stroke="#8b949e" stroke-width=".9"/></svg>
-                proxy_fusion_config.yaml
+          <div class="tab-panel active" id="tab-cyaml">
+            <div class="yaml-wrap">
+              <div class="yaml-header">
+                <div class="yd-wrap"><div class="yd r"></div><div class="yd y"></div><div class="yd g"></div></div>
+                <div class="yaml-label">proxy_fusion_config.yaml</div>
               </div>
+              <div class="yaml-body" id="yamlPreview"><span class="yaml-empty"># 点击"生成融合配置"后显示结果
+# 包含：机场节点 + 住宅IP出口 + Claude域名规则</span></div>
             </div>
-            <div class="yaml-body" id="yamlPreview"><span class="yaml-empty"># 点击"生成融合配置"后将在此显示结果
-#
-# 包含内容：
-#   - 全部机场节点和原有路由规则
-#   - 住宅 IP 出口节点（residential-exit）
-#   - claude-chain 链式代理组
-#   - Claude / Anthropic 域名规则（顶置）
-#   - TUN 模式配置（可选）</span></div>
+            <div class="action-row">
+              <button class="btn-secondary" id="copyYamlBtn">
+                <svg viewBox="0 0 12 12" fill="none"><rect x="1" y="3" width="7" height="8" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M4 1h6a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>复制
+              </button>
+              <button class="btn-secondary" id="downloadBtn">
+                <svg viewBox="0 0 12 12" fill="none"><path d="M6 1v6M3.5 5l2.5 2.5L8.5 5M1.5 10h9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>下载 YAML
+              </button>
+            </div>
+            <div class="drag-guide">
+              <div class="drag-guide-step"><div class="drag-guide-num">1</div><div>点击「下载 YAML」保存文件到本地</div></div>
+              <div class="drag-guide-arrow">↓</div>
+              <div class="drag-guide-step"><div class="drag-guide-num">2</div><div>打开 <strong>Clash Verge → 配置页</strong>，将文件<strong>拖入</strong>列表即完成导入</div></div>
+            </div>
           </div>
 
-          <!-- copy + download row -->
-          <div class="action-row">
-            <button class="btn-secondary" id="copyBtn">
-              <svg viewBox="0 0 12 12" fill="none"><rect x="1" y="3" width="7" height="8" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M4 1h6a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>复制
-            </button>
-            <button class="btn-secondary" id="downloadBtn">
-              <svg viewBox="0 0 12 12" fill="none"><path d="M6 1v6M3.5 5l2.5 2.5L8.5 5M1.5 10h9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>下载 YAML
-            </button>
-          </div>
-
-          <!-- drag-in guide -->
-          <div class="drag-guide">
-            <div class="drag-guide-step">
-              <div class="drag-guide-num">1</div>
-              <div class="drag-guide-text">点击「下载 YAML」保存文件到本地</div>
+          <div class="tab-panel" id="tab-cguide">
+            <div class="section-label">完整使用步骤</div>
+            <ul class="guide-steps">
+              <li><span class="gsn">1</span>填写住宅 IP 的 SOCKS5 信息，点击「生成融合配置」</li>
+              <li><span class="gsn">2</span>下载 YAML，拖入 Clash Verge 配置页完成导入（需 v1.6.2+）</li>
+              <li><span class="gsn">3</span>切换到该配置，确认「代理」页有 <code class="pill">claude-chain</code> 组</li>
+              <li><span class="gsn">4</span>Clash Verge → 设置 → 开启<strong>「虚拟网卡模式（TUN）」</strong></li>
+              <li><span class="gsn">5</span>直接在终端输入 <code class="pill">claude</code>，流量自动走住宅 IP ✓</li>
+              <li style="opacity:.7"><span class="gsn" style="background:#fef9c3;color:#a16207">备</span>若 TUN 模式无法开启，可改用环境变量：在终端执行 <code class="pill">export HTTPS_PROXY=http://127.0.0.1:你的Clash端口</code>，效果相同</li>
+            </ul>
+            <div class="guide-tip">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>
+              <span><strong>验证出口 IP：</strong><code class="pill">curl https://api.ipify.org</code>，返回你的住宅 IP 即成功 ✓</span>
             </div>
-            <div class="drag-guide-arrow">↓</div>
-            <div class="drag-guide-step">
-              <div class="drag-guide-num">2</div>
-              <div class="drag-guide-text">打开 <strong>Clash Verge</strong> → 配置页，将文件<strong>拖入</strong>列表即完成导入</div>
+            <hr class="divider">
+            <div class="section-label">覆盖的域名</div>
+            <div class="domain-block">
+              <div class="domain-line">api.anthropic.com → claude-chain</div>
+              <div class="domain-line">statsig.anthropic.com → claude-chain</div>
+              <div class="domain-line">anthropic.com → claude-chain</div>
+              <div class="domain-line">claude.ai → claude-chain</div>
+              <div class="domain-line">claudeusercontent.com → claude-chain</div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- GUIDE TAB -->
-        <div class="tab-panel" id="tab-guide">
-          <div class="section-label">导入步骤</div>
-          <ul class="guide-steps">
-            <li><span class="gsn">1</span>填写住宅 IP 信息，点击"生成融合配置"</li>
-            <li><span class="gsn">2</span>点击「下载 YAML」，保存 <code class="pill">proxy_fusion_config.yaml</code> 到本地</li>
-            <li><span class="gsn">3</span>打开 <strong>Clash Verge → 配置页</strong>，将 .yaml 文件<strong>拖入</strong>配置列表完成导入（需 v1.6.2+）；或点击「新建」粘贴内容保存</li>
-            <li><span class="gsn">4</span>切换到该配置，确认 <code class="pill">claude-chain</code> 代理组存在</li>
-            <li><span class="gsn">5</span>Clash Verge → 设置 → <strong>TUN 模式 → 开启</strong>（同时开启「服务模式」）</li>
-            <li><span class="gsn">6</span>运行 Claude Code，出口 IP 即为住宅 IP ✓</li>
-          </ul>
+    </div>
+  </div>
 
-          <div class="guide-tip">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1a5.5 5.5 0 100 11A5.5 5.5 0 006.5 1z" stroke="#16a34a" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>
-            <span><strong>验证出口 IP：</strong>在终端运行<br>
-            <code class="pill" style="display:inline-block;margin-top:4px">curl -x socks5h://127.0.0.1:7891 https://api.ipify.org</code><br>
-            <span style="margin-top:3px;display:block">返回的 IP 应为住宅 IP，而非机场 IP。</span></span>
+  <!-- ══════════ DIRECT MODE ══════════ -->
+  <div class="layout-panel" id="panelDirect">
+    <div class="direct-layout">
+
+      <!-- COL 1: proxy info -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><path d="M7 1C4.24 1 2 3.24 2 6c0 1.9 1.05 3.56 2.6 4.43L7 13l2.4-2.57C10.95 9.56 12 7.9 12 6c0-2.76-2.24-5-5-5z" stroke="#0d0d0c" stroke-width="1.3"/><circle cx="7" cy="6" r="1.5" stroke="#0d0d0c" stroke-width="1.3"/></svg></div>
+          <div><div class="card-title">1. 住宅 IP 信息（HTTP/HTTPS）</div><div class="card-sub">填入购买后获得的 HTTP 代理参数</div></div>
+        </div>
+        <div class="card-body">
+          <div class="field-row">
+            <div class="field"><label>HTTP 代理地址</label><input type="text" id="d_http_server" placeholder="148.135.17.24"></div>
+            <div class="field"><label>HTTP 端口</label><input type="number" id="d_http_port" placeholder="3128"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>HTTPS 代理地址</label><input type="text" id="d_https_server" placeholder="148.135.17.24"></div>
+            <div class="field"><label>HTTPS 端口</label><input type="number" id="d_https_port" placeholder="3129"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>用户名（可选）</label><input type="text" id="d_user" placeholder="username" autocomplete="off"></div>
+            <div class="field"><label>密码（可选）</label><input type="password" id="d_pass" placeholder="password" autocomplete="off"></div>
+          </div>
+
+          <button class="btn-primary" id="generateCmdBtn" style="margin-top:8px">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            生成配置命令
+          </button>
+          <div class="status-badge" id="directStatus"></div>
+        </div>
+      </div>
+
+      <!-- COL 2: result command -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10" rx="2" stroke="#0d0d0c" stroke-width="1.3"/><path d="M4 5l2.5 2.5L4 10M8 10h2" stroke="#0d0d0c" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div><div class="card-title">2. 终端配置命令</div><div class="card-sub">写入 ~/.zshrc，永久生效</div></div>
+        </div>
+        <div class="card-body">
+          <div class="cmd-box">
+            <div class="cmd-header">
+              <div class="cmd-label">~/.zshrc</div>
+              <button class="cmd-copy" id="copyCmdBtn">复制</button>
+            </div>
+            <div class="cmd-body" id="cmdPreview"><span class="cmd-empty"># 填写左侧代理信息后自动生成</span></div>
+          </div>
+
+          <div class="info-note" style="margin-top:10px">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#2563eb" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>复制后粘贴到终端执行（一次即可），之后直接输 <code class="pill">claude</code> 即走住宅 IP。</span>
           </div>
 
           <hr class="divider">
-          <div class="section-label">覆盖的 Anthropic 域名</div>
-          <div class="domain-block">
-            <div class="domain-line">api.anthropic.com → claude-chain</div>
-            <div class="domain-line">statsig.anthropic.com → claude-chain</div>
-            <div class="domain-line">anthropic.com → claude-chain</div>
-            <div class="domain-line">claude.ai → claude-chain</div>
-            <div class="domain-line">claudeusercontent.com → claude-chain</div>
+          <div class="section-label">使用步骤</div>
+          <ul class="guide-steps">
+            <li><span class="gsn">1</span>填写左侧 HTTP/HTTPS 代理信息，点击「生成配置命令」</li>
+            <li><span class="gsn">2</span>点击「复制」，在终端粘贴并执行（写入 ~/.zshrc）</li>
+            <li><span class="gsn">3</span>运行 <code class="pill">source ~/.zshrc</code> 使配置立即生效</li>
+            <li><span class="gsn">4</span>直接输入 <code class="pill">claude</code>，流量自动走住宅 IP ✓</li>
+          </ul>
+          <div class="guide-tip">
+            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span><strong>验证：</strong>执行后运行 <code class="pill">curl https://api.ipify.org</code>，返回你的住宅 IP 即成功 ✓</span>
           </div>
         </div>
-
       </div>
-    </div>
 
+    </div>
   </div>
+
 </div>
 
 <div class="toast" id="toast"></div>
@@ -419,30 +435,35 @@
 <script>
 // ── helpers ──────────────────────────────────────────────
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
-function showToast(msg,dur=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),dur)}
-function showStatus(type,msg){const el=document.getElementById('statusBadge');el.className='status-badge '+type;el.innerHTML=(type==='success'?'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="#16a34a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#dc2626" stroke-width="1.2"/><path d="M6 4v2.5M6 8v.5" stroke="#dc2626" stroke-width="1.2" stroke-linecap="round"/></svg>')+esc(msg)}
-function setStep(n){[1,2,3,4].forEach(i=>{const el=document.getElementById('step'+i);if(!el)return;el.classList.toggle('active',i===n);el.classList.toggle('done',i<n)})}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200)}
+function showStatus(id,type,msg){const el=document.getElementById(id);el.className='status-badge '+type;el.innerHTML=(type==='success'?'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="#16a34a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#dc2626" stroke-width="1.2"/><path d="M6 4v2.5M6 8v.5" stroke="#dc2626" stroke-width="1.2" stroke-linecap="round"/></svg>')+esc(msg)}
 async function copyText(t){try{await navigator.clipboard.writeText(t);showToast('✓ 已复制到剪贴板')}catch{showToast('复制失败，请手动选取')}}
 
-// ── tabs ──────────────────────────────────────────────────
+// ── mode switch ──────────────────────────────────────────
+function switchMode(mode){
+  document.getElementById('modeClash').classList.toggle('active', mode==='clash');
+  document.getElementById('modeDirect').classList.toggle('active', mode==='direct');
+  document.getElementById('panelClash').classList.toggle('active', mode==='clash');
+  document.getElementById('panelDirect').classList.toggle('active', mode==='direct');
+}
+
+// ── tabs ─────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click',()=>{
     const tab=btn.dataset.tab;
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b===btn));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+tab));
+    const bar=btn.closest('.tab-bar');
+    bar.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b===btn));
+    // find sibling panels
+    const card=bar.closest('.card-body');
+    card.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+tab));
   });
-});
-
-// ── relay toggle ─────────────────────────────────────────
-document.getElementById('enableRelay').addEventListener('change',e=>{
-  document.getElementById('relayBlock').style.display=e.target.checked?'block':'none';
 });
 
 // ── file upload ───────────────────────────────────────────
 async function loadFile(file){
   document.getElementById('existingConfig').value=await file.text();
   document.getElementById('fileName').textContent=file.name;
-  showToast('✓ 已加载：'+file.name);setStep(2);
+  showToast('✓ 已加载：'+file.name);
 }
 document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0])});
 const dz=document.getElementById('dropZone');
@@ -450,7 +471,7 @@ dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='var(
 dz.addEventListener('dragleave',()=>{dz.style.borderColor=''});
 dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0])});
 
-// ── Claude / Anthropic domain rules ──────────────────────
+// ── Claude domain rules ───────────────────────────────────
 const CLAUDE_RULES=[
   'DOMAIN-SUFFIX,api.anthropic.com,claude-chain',
   'DOMAIN-SUFFIX,statsig.anthropic.com,claude-chain',
@@ -458,27 +479,23 @@ const CLAUDE_RULES=[
   'DOMAIN-SUFFIX,claude.ai,claude-chain',
   'DOMAIN-SUFFIX,claudeusercontent.com,claude-chain',
 ];
-const CLAUDE_KEYWORDS=['api.anthropic','statsig.anthropic','anthropic.com','claude.ai','claudeusercontent'];
+const CLAUDE_KW=['api.anthropic','statsig.anthropic','anthropic.com','claude.ai','claudeusercontent'];
 
-// ── merge ─────────────────────────────────────────────────
-function mergeConfigs(originalYaml,exit_,relay,injectTun){
+// ── CLASH MODE: merge ─────────────────────────────────────
+function mergeConfigs(originalYaml, server, port, user, pass, injectTun){
   let cfg;
   if(!originalYaml||!originalYaml.trim()){
-    // No existing config — generate a clean base config
     cfg={port:7890,'socks-port':7891,'allow-lan':false,mode:'rule','log-level':'info',
          proxies:[],  'proxy-groups':[], rules:['MATCH,DIRECT']};
   } else {
     cfg=jsyaml.load(originalYaml);
-    if(typeof cfg!=='object'||cfg===null)throw new Error('无效的 YAML 格式');
-    if(!Array.isArray(cfg.proxies))         cfg.proxies=[];
-    if(!Array.isArray(cfg['proxy-groups'])) cfg['proxy-groups']=[];
-    if(!Array.isArray(cfg.rules))           cfg.rules=['MATCH,DIRECT'];
-    // ⚠️ Preserve original ports — never overwrite user's existing port settings
-    // cfg.port and cfg['socks-port'] are intentionally left untouched
+    if(typeof cfg!=='object'||cfg===null) throw new Error('无效的 YAML 格式');
+    if(!Array.isArray(cfg.proxies))          cfg.proxies=[];
+    if(!Array.isArray(cfg['proxy-groups']))  cfg['proxy-groups']=[];
+    if(!Array.isArray(cfg.rules))            cfg.rules=['MATCH,DIRECT'];
+    // Preserve original port settings
   }
-
   if(injectTun){
-    // Only inject tun block, never touch port/socks-port
     cfg.tun={enable:true,stack:'system','auto-route':true,
              'auto-detect-interface':true,'dns-hijack':['any:53'],'strict-route':false};
     if(!cfg.dns)
@@ -487,80 +504,48 @@ function mergeConfigs(originalYaml,exit_,relay,injectTun){
                nameserver:['8.8.8.8','1.1.1.1'],
                fallback:['tls://1.1.1.1:853','tls://8.8.8.8:853']};
   }
-
-  // exit node
-  const exitNode={name:'residential-exit',type:exit_.type,
-    server:exit_.server,port:Number(exit_.port)};
-  if(exit_.user) exitNode.username=exit_.user;
-  if(exit_.pass) exitNode.password=exit_.pass;
-
-  cfg.proxies=cfg.proxies.filter(p=>p.name!=='residential-exit'&&p.name!=='relay-entry');
+  // Build SOCKS5 exit node
+  const exitNode={name:'residential-exit',type:'socks5',server,port:Number(port)};
+  if(user) exitNode.username=user;
+  if(pass) exitNode.password=pass;
+  cfg.proxies=cfg.proxies.filter(p=>p.name!=='residential-exit');
   cfg.proxies.push(exitNode);
-  let chain=['residential-exit'];
-
-  if(relay&&relay.server&&relay.port){
-    const rn={name:'relay-entry',type:relay.type,
-      server:relay.server,port:Number(relay.port)};
-    if(relay.user) rn.username=relay.user;
-    if(relay.pass) rn.password=relay.pass;
-    cfg.proxies.push(rn);
-    chain=['relay-entry','residential-exit'];
-  }
-
+  // proxy group: select (not relay — SOCKS5 exit node is a direct endpoint)
   cfg['proxy-groups']=cfg['proxy-groups'].filter(g=>g.name!=='claude-chain');
-  cfg['proxy-groups'].push({
-    name:'claude-chain',
-    type:chain.length>1?'relay':'select',
-    proxies:chain
-  });
-
-  cfg.rules=cfg.rules.filter(r=>!CLAUDE_KEYWORDS.some(k=>r.includes(k)));
+  cfg['proxy-groups'].push({name:'claude-chain',type:'select',proxies:['residential-exit']});
+  // rules
+  cfg.rules=cfg.rules.filter(r=>!CLAUDE_KW.some(k=>r.includes(k)));
   cfg.rules=[...CLAUDE_RULES,...cfg.rules];
-
   return jsyaml.dump(cfg,{lineWidth:140});
 }
 
-// ── generate ──────────────────────────────────────────────
 let currentYaml=null;
 document.getElementById('generateBtn').addEventListener('click',()=>{
-  const server=document.getElementById('exitServer').value.trim();
-  const port  =document.getElementById('exitPort').value.trim();
-  if(!server||!port){showStatus('error','请填写住宅 IP 服务器地址和端口');return}
-  if(isNaN(Number(port))||Number(port)<1||Number(port)>65535){showStatus('error','端口号无效（1–65535）');return}
+  const server=document.getElementById('c_server').value.trim();
+  const port  =document.getElementById('c_port').value.trim();
+  if(!server||!port){showStatus('clashStatus','error','请填写服务器地址和端口');return}
+  if(isNaN(Number(port))||Number(port)<1||Number(port)>65535){showStatus('clashStatus','error','端口号无效');return}
   try{
-    const exit_={type:document.getElementById('exitType').value,server,port,
-      user:document.getElementById('exitUser').value.trim(),
-      pass:document.getElementById('exitPass').value};
-    let relay=null;
-    if(document.getElementById('enableRelay').checked){
-      const rs=document.getElementById('relayServer').value.trim();
-      const rp=document.getElementById('relayPort').value.trim();
-      if(rs&&rp) relay={type:document.getElementById('relayType').value,server:rs,port:rp,
-        user:document.getElementById('relayUser').value.trim(),
-        pass:document.getElementById('relayPass').value};
-    }
     const yaml=mergeConfigs(
       document.getElementById('existingConfig').value,
-      exit_,relay,
+      server, port,
+      document.getElementById('c_user').value.trim(),
+      document.getElementById('c_pass').value,
       document.getElementById('enableTun').checked
     );
     currentYaml=yaml;
     document.getElementById('yamlPreview').textContent=yaml;
-    showStatus('success','生成成功！Claude Code 流量将经住宅 IP 出口');
-    setStep(4);
+    showStatus('clashStatus','success','生成成功！下载 YAML 拖入 Clash 即可');
     // switch to yaml tab
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab==='yaml'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-yaml'));
-  }catch(err){showStatus('error','生成失败：'+err.message)}
+    document.querySelectorAll('#tab-cyaml,#tab-cguide').forEach(p=>p.classList.toggle('active',p.id==='tab-cyaml'));
+    document.querySelectorAll('[data-tab="cyaml"],[data-tab="cguide"]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='cyaml'));
+  }catch(err){showStatus('clashStatus','error','生成失败：'+err.message)}
 });
 
-// ── copy ──────────────────────────────────────────────────
-document.getElementById('copyBtn').addEventListener('click',()=>{
+document.getElementById('copyYamlBtn').addEventListener('click',()=>{
   if(!currentYaml){showToast('请先生成配置');return}
   copyText(currentYaml);
 });
-
-// ── download ──────────────────────────────────────────────
 document.getElementById('downloadBtn').addEventListener('click',()=>{
   if(!currentYaml){showToast('请先生成配置');return}
   const a=document.createElement('a');
@@ -570,11 +555,59 @@ document.getElementById('downloadBtn').addEventListener('click',()=>{
   showToast('✓ 已下载配置文件');
 });
 
+// ── DIRECT MODE: generate command ─────────────────────────
+let currentCmd=null;
+document.getElementById('generateCmdBtn').addEventListener('click',()=>{
+  const hs =document.getElementById('d_https_server').value.trim();
+  const hp =document.getElementById('d_https_port').value.trim();
+  const s  =document.getElementById('d_http_server').value.trim();
+  const p  =document.getElementById('d_http_port').value.trim();
+  const user=document.getElementById('d_user').value.trim();
+  const pass=document.getElementById('d_pass').value;
 
+  if((!s||!p)&&(!hs||!hp)){showStatus('directStatus','error','请至少填写一组代理地址和端口');return}
 
+  // Build proxy URLs with optional auth
+  function buildUrl(scheme,srv,prt){
+    if(!srv||!prt) return null;
+    const auth=(user&&pass)?`${encodeURIComponent(user)}:${encodeURIComponent(pass)}@`:(user?`${encodeURIComponent(user)}@`:'');
+    return `${scheme}://${auth}${srv}:${prt}`;
+  }
+  const httpUrl =buildUrl('http', s||hs, p||hp);
+  const httpsUrl=buildUrl('https',hs||s, hp||p);
 
+  const lines=[];
+  lines.push('# 写入 ~/.zshrc — 执行后每次开终端自动生效');
+  if(httpUrl)  lines.push(`export HTTP_PROXY=${httpUrl}`);
+  if(httpsUrl) lines.push(`export HTTPS_PROXY=${httpsUrl}`);
+  if(httpUrl||httpsUrl) lines.push(`export ALL_PROXY=${httpsUrl||httpUrl}`);
+  lines.push('export NO_PROXY=localhost,127.0.0.1');
+  lines.push('');
+  lines.push('# 执行以下命令使其立即生效');
+  lines.push('source ~/.zshrc');
 
-document.getElementById('exitServer').addEventListener('input', () => setStep(3));
+  const cmd=lines.join('\n');
+  currentCmd=lines.slice(1, lines.indexOf('')).join('\n'); // just the export lines for clipboard
+
+  // Render with syntax highlight
+  const rendered=lines.map(l=>{
+    if(l.startsWith('#')) return `<span style="color:#484f58">${esc(l)}</span>`;
+    if(l.startsWith('export ')){
+      const eq=l.indexOf('=');
+      return `<span style="color:#79c0ff">export </span><span style="color:#c9d1d9">${esc(l.slice(7,eq))}</span><span style="color:#c9d1d9">=</span><span style="color:#a5d6ff">${esc(l.slice(eq+1))}</span>`;
+    }
+    if(l.startsWith('source')) return `<span style="color:#7ee787">${esc(l)}</span>`;
+    return esc(l);
+  }).join('\n');
+
+  document.getElementById('cmdPreview').innerHTML=rendered;
+  showStatus('directStatus','success','命令已生成，复制后粘贴到终端执行即可');
+});
+
+document.getElementById('copyCmdBtn').addEventListener('click',()=>{
+  if(!currentCmd){showToast('请先生成命令');return}
+  copyText(currentCmd);
+});
 </script>
 </body>
 </html>
