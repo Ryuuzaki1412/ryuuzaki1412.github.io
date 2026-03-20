@@ -160,6 +160,11 @@
 
   @media(max-width:920px){.columns{grid-template-columns:1fr}.prereq-grid{grid-template-columns:1fr 1fr}.hero{padding:40px 1.5rem 30px}nav{padding:0 1rem}.main,.prereq-wrap{padding-left:1rem;padding-right:1rem}}
   @media(max-width:480px){.prereq-grid{grid-template-columns:1fr}.steps-bar{display:none}}
+
+  .btn-import{width:100%;padding:10px 16px;background:var(--blue);color:white;border:none;border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.81rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s,transform .12s;margin-bottom:6px}
+  .btn-import:hover{opacity:.88}.btn-import:active{transform:scale(.98)}
+  .btn-import:disabled{opacity:.55;cursor:not-allowed}
+  .btn-import-note{font-size:.67rem;color:var(--text-muted);text-align:center;line-height:1.5}
 </style>
 </head>
 <body>
@@ -353,25 +358,12 @@
             </button>
           </div>
 
-          <!-- import guide -->
-          <div class="import-steps-inline">
-            <div class="import-step-row">
-              <div class="import-step-badge">1</div>
-              <div class="import-step-text">点击上方 <strong>下载 YAML</strong> 保存文件到本地</div>
-            </div>
-            <div class="import-step-row">
-              <div class="import-step-badge">2</div>
-              <div class="import-step-text">打开 <strong>Clash Verge</strong>，进入「配置」页面</div>
-            </div>
-            <div class="import-step-row">
-              <div class="import-step-badge">3</div>
-              <div class="import-step-text">将文件<strong>拖入</strong>配置列表，或点击「导入」选择文件，然后切换到该配置</div>
-            </div>
-            <div class="import-step-row">
-              <div class="import-step-badge">4</div>
-              <div class="import-step-text">「设置」→ 开启 <strong>TUN 模式</strong>，Claude Code 流量即走住宅 IP ✓</div>
-            </div>
-          </div>
+          <!-- one-click import -->
+          <button class="btn-import" id="importBtn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h9M7 4l3 3-3 3" stroke="white" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 2h1a1 1 0 011 1v8a1 1 0 01-1 1h-1" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>
+            一键导入 Clash
+          </button>
+          <div class="btn-import-note" id="importNote">生成配置后即可一键导入 Clash Verge / Clash for Windows</div>
         </div>
 
         <!-- GUIDE TAB -->
