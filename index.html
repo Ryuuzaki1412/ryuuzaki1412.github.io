@@ -241,11 +241,11 @@
           </div>
           <div class="info-note" style="margin-top:2px;background:var(--green-soft);border-color:#bbf7d0;color:#166534">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>
-            <span><strong>双层代理链说明：</strong>流量路径为 <strong>机场节点 → 住宅 SOCKS5 代理 → Claude</strong><br>导入 YAML 后，在 Clash Verge 开启<strong>「虚拟网卡模式（TUN）」</strong>，之后直接输 <code class="pill" style="background:rgba(0,0,0,.08)">claude</code> 即通过双层代理访问。</span>
+            <span><strong>双层代理链说明（dialer-proxy）：</strong>流量路径为 <strong>机场节点 → 住宅 SOCKS5 代理 → Claude</strong><br>导入 YAML 后，在 Clash Verge 开启<strong>「虚拟网卡模式（TUN）」</strong>，之后直接输 <code class="pill" style="background:rgba(0,0,0,.08)">claude</code> 即通过双层代理访问。</span>
           </div>
           <button class="btn-primary" id="generateBtn" style="margin-top:14px">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            生成融合配置（双层链）
+            生成融合配置（dialer-proxy双层链）
           </button>
           <div class="status-badge" id="clashStatus"></div>
         </div>
@@ -265,9 +265,9 @@
             <div class="yaml-wrap">
               <div class="yaml-header">
                 <div class="yd-wrap"><div class="yd r"></div><div class="yd y"></div><div class="yd g"></div></div>
-                <div class="yaml-label">proxy_fusion_config.yaml（双层链）</div>
+                <div class="yaml-label">proxy_fusion_config.yaml（dialer-proxy双层链）</div>
               </div>
-              <div class="yaml-body" id="yamlPreview"><span class="yaml-empty"># 点击"生成融合配置（双层链）"后显示结果</span></div>
+              <div class="yaml-body" id="yamlPreview"><span class="yaml-empty"># 点击"生成融合配置（dialer-proxy双层链）"后显示结果</span></div>
             </div>
             <div class="action-row">
               <button class="btn-secondary" id="copyYamlBtn"><svg viewBox="0 0 12 12" fill="none"><rect x="1" y="3" width="7" height="8" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M4 1h6a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>复制</button>
@@ -280,11 +280,11 @@
             </div>
           </div>
           <div class="tab-panel" id="tab-cguide">
-            <div class="section-label">双层代理链使用步骤</div>
+            <div class="section-label">双层代理链使用步骤（dialer-proxy）</div>
             <ul class="guide-steps">
-              <li><span class="gsn">1</span>填写住宅 IP 的 SOCKS5 信息，点击「生成融合配置（双层链）」</li>
+              <li><span class="gsn">1</span>填写住宅 IP 的 SOCKS5 信息，点击「生成融合配置（dialer-proxy双层链）」</li>
               <li><span class="gsn">2</span>下载 YAML，拖入 Clash Verge 配置页完成导入</li>
-              <li><span class="gsn">3</span>切换到该配置，确认「代理」页有 <code class="pill">claude-chain</code> 组（relay 类型）</li>
+              <li><span class="gsn">3</span>切换到该配置，确认「代理」页有 <code class="pill">claude-chain</code> 组（select 类型）</li>
               <li><span class="gsn">4</span>Clash Verge → 设置 → 开启<strong>「虚拟网卡模式（TUN）」</strong></li>
               <li><span class="gsn">5</span>直接在终端输入 <code class="pill">claude</code>，流量自动走：机场 → 住宅代理 → Claude ✓</li>
             </ul>
@@ -307,9 +307,8 @@
     </div>
   </div>
 
-  <!-- DIRECT MODE (保持不变，省略以节省篇幅，实际使用时需要保留完整内容) -->
+  <!-- DIRECT MODE -->
   <div class="layout-panel" id="panelDirect">
-    <!-- 直接模式的内容与之前相同，这里省略，实际使用时需要完整保留 -->
     <div class="direct-layout">
       <div class="card">
         <div class="card-top">
@@ -416,6 +415,7 @@ const CLAUDE_RULES=[
 ];
 const CLAUDE_KW=['api.anthropic','statsig.anthropic','anthropic.com','claude.ai','claudeusercontent'];
 
+// 使用 dialer-proxy 方式实现代理链（Clash Verge Rev 官方推荐）
 function mergeConfigs(originalYaml, server, port, user, pass, injectTun){
   let cfg;
   if(!originalYaml||!originalYaml.trim()){
@@ -439,12 +439,7 @@ function mergeConfigs(originalYaml, server, port, user, pass, injectTun){
                fallback:['tls://1.1.1.1:853','tls://8.8.8.8:853']};
   }
   
-  const residentialNode={name:'residential-exit',type:'socks5',server,port:Number(port)};
-  if(user) residentialNode.username=user;
-  if(pass) residentialNode.password=pass;
-  cfg.proxies=cfg.proxies.filter(p=>p.name!=='residential-exit');
-  cfg.proxies.push(residentialNode);
-  
+  // 1. 查找用户现有的代理选择组（机场组）
   let airportGroup = null;
   for(const g of cfg['proxy-groups']){
     if(g.type === 'select' && g.proxies && g.proxies.length > 0 && g.name !== 'claude-chain'){
@@ -453,6 +448,7 @@ function mergeConfigs(originalYaml, server, port, user, pass, injectTun){
     }
   }
   
+  // 2. 如果没有找到现成的代理组，但存在代理节点，创建一个
   if(!airportGroup){
     const existingProxyNames = cfg.proxies.filter(p => p.name !== 'residential-exit').map(p => p.name);
     if(existingProxyNames.length > 0){
@@ -468,22 +464,36 @@ function mergeConfigs(originalYaml, server, port, user, pass, injectTun){
     }
   }
   
-  cfg['proxy-groups'] = cfg['proxy-groups'].filter(g => g.name !== 'claude-chain');
+  // 3. 创建住宅 SOCKS5 代理节点
+  const residentialNode={
+    name:'residential-exit',
+    type:'socks5',
+    server:server,
+    port:Number(port)
+  };
+  if(user) residentialNode.username=user;
+  if(pass) residentialNode.password=pass;
   
+  // 4. 关键：如果有机场组，给住宅代理节点设置 dialer-proxy 属性，指向机场组
   if(airportGroup){
-    cfg['proxy-groups'].push({
-      name: 'claude-chain',
-      type: 'relay',
-      proxies: [airportGroup.name, 'residential-exit']
-    });
-  } else {
-    cfg['proxy-groups'].push({
-      name: 'claude-chain',
-      type: 'select',
-      proxies: ['residential-exit']
-    });
+    residentialNode['dialer-proxy'] = airportGroup.name;
   }
   
+  // 5. 添加住宅代理节点（替换旧的）
+  cfg.proxies = cfg.proxies.filter(p => p.name !== 'residential-exit');
+  cfg.proxies.push(residentialNode);
+  
+  // 6. 移除旧的 claude-chain 组
+  cfg['proxy-groups'] = cfg['proxy-groups'].filter(g => g.name !== 'claude-chain');
+  
+  // 7. 创建 claude-chain 选择组，让用户可以选择住宅代理作为出口
+  cfg['proxy-groups'].push({
+    name: 'claude-chain',
+    type: 'select',
+    proxies: ['residential-exit']
+  });
+  
+  // 8. 添加 Claude 域名规则
   cfg.rules = cfg.rules.filter(r => !CLAUDE_KW.some(k => r.includes(k)));
   cfg.rules = [...CLAUDE_RULES, ...cfg.rules];
   
@@ -506,7 +516,7 @@ document.getElementById('generateBtn').addEventListener('click',()=>{
     );
     currentYaml=yaml;
     document.getElementById('yamlPreview').textContent=yaml;
-    showStatus('clashStatus','success','双层代理链配置生成成功！流量路径：机场节点 → 住宅代理');
+    showStatus('clashStatus','success','dialer-proxy 双层代理链配置生成成功！流量路径：机场节点 → 住宅代理');
     document.querySelectorAll('#tab-cyaml,#tab-cguide').forEach(p=>p.classList.toggle('active',p.id==='tab-cyaml'));
     document.querySelectorAll('[data-tab="cyaml"],[data-tab="cguide"]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='cyaml'));
   }catch(err){showStatus('clashStatus','error','生成失败：'+err.message)}
