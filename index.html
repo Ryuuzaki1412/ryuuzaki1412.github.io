@@ -3,584 +3,832 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ProxyFusion — Claude Code 住宅IP代理 | 双层代理链</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<title>ITSM AI 助手</title>
 <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg:#f9f9f8;--surface:#fff;--border:#e8e8e6;--border-strong:#d0d0cc;
-    --text-primary:#0d0d0c;--text-secondary:#6b6b68;--text-muted:#a0a09c;
-    --accent-soft:#f0f0ee;--blue:#2563eb;--blue-soft:#eff6ff;
-    --green:#16a34a;--green-soft:#f0fdf4;--amber:#d97706;--amber-soft:#fffbeb;
-    --red:#dc2626;--purple:#7c3aed;--purple-soft:#f5f3ff;
-    --radius:16px;--radius-sm:10px;
-    --shadow:0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.04);
-    --shadow-md:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+    --bg: #f5f5f4;
+    --surface: #ffffff;
+    --surface2: #f9f9f8;
+    --border: rgba(0,0,0,0.1);
+    --border2: rgba(0,0,0,0.2);
+    --text: #1a1a18;
+    --text2: #6b6b67;
+    --text3: #9b9b96;
+    --accent: #534AB7;
+    --accent-light: #EEEDFE;
+    --accent-text: #3C3489;
+    --success: #0F6E56;
+    --success-light: #E1F5EE;
+    --warning: #854F0B;
+    --warning-light: #FAEEDA;
+    --danger: #A32D2D;
+    --danger-light: #FCEBEB;
+    --radius: 10px;
+    --radius-sm: 6px;
   }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;-webkit-font-smoothing:antialiased}
-
-  nav{position:sticky;top:0;z-index:100;background:rgba(249,249,248,.9);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between}
-  .nav-brand{display:flex;align-items:center;gap:10px;font-size:1rem;font-weight:600;text-decoration:none;color:var(--text-primary)}
-  .nav-brand-icon{width:28px;height:28px;background:var(--text-primary);border-radius:8px;display:flex;align-items:center;justify-content:center}
-  .nav-brand-icon svg{width:15px;height:15px;fill:white}
-  .nav-links{display:flex;align-items:center;gap:6px}
-  .nav-link{font-size:.85rem;color:var(--text-secondary);font-weight:500;text-decoration:none;padding:6px 12px;border-radius:8px;transition:background .15s,color .15s}
-  .nav-link:hover{background:var(--accent-soft);color:var(--text-primary)}
-  .btn-nav{font-size:.85rem;font-weight:600;color:white;background:var(--text-primary);border:none;cursor:pointer;padding:7px 16px;border-radius:8px;font-family:'Sora',sans-serif}
-
-  .hero{text-align:center;padding:56px 2rem 40px;max-width:640px;margin:0 auto}
-  .hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:5px 14px;font-size:.75rem;color:var(--text-secondary);font-weight:500;margin-bottom:20px;animation:fadeUp .4s ease both}
-  .badge-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
-  .hero h1{font-size:clamp(1.75rem,4.5vw,2.5rem);font-weight:700;line-height:1.15;letter-spacing:-.03em;margin-bottom:12px;animation:fadeUp .4s .05s ease both}
-  .hero h1 em{font-style:normal;color:var(--text-secondary)}
-  .hero p{font-size:.92rem;color:var(--text-secondary);line-height:1.7;max-width:440px;margin:0 auto;animation:fadeUp .4s .1s ease both}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-  .mode-wrap{max-width:760px;margin:28px auto 36px;padding:0 2rem;animation:fadeUp .4s .12s ease both}
-  .mode-label{font-size:.72rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;text-align:center;margin-bottom:12px}
-  .mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .mode-card{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:16px 18px;cursor:pointer;transition:all .18s;display:flex;gap:12px;align-items:flex-start}
-  .mode-card:hover{border-color:var(--border-strong);box-shadow:var(--shadow)}
-  .mode-card.active{border-color:var(--text-primary);box-shadow:var(--shadow-md)}
-  .mode-card.active.clash{border-color:var(--blue);background:var(--blue-soft)}
-  .mode-card.active.direct{border-color:var(--purple);background:var(--purple-soft)}
-  .mode-card-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1rem}
-  .mode-card.clash .mode-card-icon{background:#dbeafe}
-  .mode-card.direct .mode-card-icon{background:#ede9fe}
-  .mode-card-body{}
-  .mode-card-title{font-size:.84rem;font-weight:600;margin-bottom:3px}
-  .mode-card-desc{font-size:.71rem;color:var(--text-secondary);line-height:1.5}
-  .mode-card.active.clash .mode-card-title{color:var(--blue)}
-  .mode-card.active.direct .mode-card-title{color:var(--purple)}
-
-  .main{max-width:1140px;margin:0 auto;padding:0 2rem 80px}
-  .clash-layout{display:grid;grid-template-columns:1fr 1fr 1.2fr;gap:18px;align-items:start}
-  .direct-layout{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start;max-width:800px;margin:0 auto}
-  .layout-panel{display:none}
-  .layout-panel.active{display:block}
-
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .35s ease both;transition:box-shadow .2s}
-  .card:hover{box-shadow:var(--shadow-md)}
-  .card-top{padding:16px 20px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-  .card-icon{width:30px;height:30px;border-radius:8px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .card-icon svg{width:14px;height:14px}
-  .card-title{font-size:.85rem;font-weight:600}
-  .card-sub{font-size:.69rem;color:var(--text-muted);margin-top:1px}
-  .card-body{padding:16px 20px}
-
-  .field{margin-bottom:11px}
-  .field label{display:block;font-size:.71rem;font-weight:500;color:var(--text-secondary);margin-bottom:5px}
-  .field input,.field select,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.8rem;color:var(--text-primary);background:var(--bg);transition:border-color .15s,box-shadow .15s;outline:none}
-  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--text-primary);box-shadow:0 0 0 3px rgba(13,13,12,.07);background:white}
-  .field input::placeholder,.field textarea::placeholder{color:var(--text-muted);font-size:.74rem}
-  .field textarea{font-family:'JetBrains Mono',monospace;font-size:.69rem;resize:vertical;min-height:110px;line-height:1.65}
-  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-  .toggle-row{display:flex;align-items:center;gap:10px;padding:7px 0}
-  .toggle{position:relative;width:34px;height:19px;flex-shrink:0;cursor:pointer}
-  .toggle input{opacity:0;width:0;height:0;position:absolute}
-  .toggle-track{position:absolute;inset:0;background:var(--border-strong);border-radius:100px;transition:background .2s}
-  .toggle-thumb{position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:white;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .2s}
-  .toggle input:checked~.toggle-track{background:var(--text-primary)}
-  .toggle input:checked~.toggle-thumb{transform:translateX(15px)}
-  .toggle-label{font-size:.75rem;font-weight:500;color:var(--text-secondary);cursor:pointer;line-height:1.4}
-  .divider{border:none;border-top:1px solid var(--border);margin:12px 0}
-  .info-note{background:var(--blue-soft);border:1px solid #bfdbfe;border-radius:var(--radius-sm);padding:8px 10px;display:flex;gap:7px;align-items:flex-start;font-size:.69rem;color:#1d4ed8;line-height:1.55;margin-top:9px}
-  .info-note svg{flex-shrink:0;margin-top:1px}
-
-  .btn-primary{width:100%;padding:10px 16px;background:var(--text-primary);color:white;border:none;border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.81rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .15s,transform .12s;margin-top:4px}
-  .btn-primary:hover{opacity:.85}.btn-primary:active{transform:scale(.98)}
-  .action-row{display:flex;gap:7px;margin-bottom:12px}
-  .btn-secondary{flex:1;padding:8px 10px;background:var(--surface);color:var(--text-primary);border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Sora',sans-serif;font-size:.74rem;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:5px;transition:background .15s}
-  .btn-secondary:hover{background:var(--accent-soft)}
-  .btn-secondary svg{width:12px;height:12px;flex-shrink:0}
-  .status-badge{display:none;align-items:center;gap:6px;font-size:.69rem;font-weight:500;padding:6px 11px;border-radius:100px;margin-top:7px}
-  .status-badge.success{background:var(--green-soft);color:var(--green);display:flex;border:1px solid #bbf7d0}
-  .status-badge.error{background:#fef2f2;color:var(--red);display:flex;border:1px solid #fecaca}
-
-  .file-drop{border:1.5px dashed var(--border-strong);border-radius:var(--radius-sm);padding:13px;text-align:center;cursor:pointer;transition:border-color .15s;background:var(--bg)}
-  .file-drop:hover{border-color:var(--text-primary);background:var(--accent-soft)}
-  .file-drop input{display:none}
-  .yaml-wrap{background:#0d1117;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:11px;border:1px solid #21262d}
-  .yaml-header{background:#161b22;padding:7px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #21262d}
-  .yaml-label{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:#8b949e;display:flex;align-items:center;gap:5px}
-  .yd-wrap{display:flex;gap:4px}
-  .yd{width:8px;height:8px;border-radius:50%}
-  .yd.r{background:#ff5f57}.yd.y{background:#ffbd2e}.yd.g{background:#28c840}
-  .yaml-body{font-family:'JetBrains Mono',monospace;font-size:.66rem;color:#c9d1d9;padding:12px;max-height:300px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;line-height:1.65}
-  .yaml-body::-webkit-scrollbar{width:4px}
-  .yaml-body::-webkit-scrollbar-thumb{background:#30363d;border-radius:2px}
-  .yaml-empty{color:#484f58;font-style:italic}
-  .tab-bar{display:flex;gap:4px;background:var(--accent-soft);border-radius:8px;padding:3px;margin-bottom:13px}
-  .tab-btn{flex:1;padding:6px 8px;border:none;background:transparent;border-radius:6px;font-family:'Sora',sans-serif;font-size:.71rem;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .15s}
-  .tab-btn.active{background:white;color:var(--text-primary);box-shadow:0 1px 3px rgba(0,0,0,.08)}
-  .tab-panel{display:none}
-  .tab-panel.active{display:block}
-  .section-label{font-size:.65rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
-  .guide-steps{list-style:none}
-  .guide-steps li{display:flex;gap:8px;align-items:flex-start;font-size:.71rem;color:var(--text-secondary);padding:6px 0;border-bottom:1px solid var(--border);line-height:1.55}
-  .guide-steps li:last-child{border-bottom:none}
-  .gsn{width:16px;height:16px;border-radius:50%;background:var(--accent-soft);color:var(--text-secondary);font-size:.62rem;font-weight:600;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px}
-  code.pill{background:var(--accent-soft);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.64rem}
-  .guide-tip{background:var(--green-soft);border:1px solid #bbf7d0;border-radius:var(--radius-sm);padding:8px 10px;font-size:.69rem;color:#166534;line-height:1.55;margin-top:10px;display:flex;gap:7px;align-items:flex-start}
-  .drag-guide{background:var(--accent-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-top:4px}
-  .drag-guide-step{display:flex;align-items:flex-start;gap:10px;font-size:.75rem;color:var(--text-secondary);line-height:1.5}
-  .drag-guide-num{width:20px;height:20px;border-radius:50%;background:var(--text-primary);color:white;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-  .drag-guide-arrow{text-align:center;font-size:.85rem;color:var(--text-muted);padding:4px 0 4px 30px}
-  .cmd-box{background:#0d1117;border:1px solid #21262d;border-radius:var(--radius-sm);overflow:hidden;margin-top:10px}
-  .cmd-header{background:#161b22;padding:7px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #21262d}
-  .cmd-label{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:#8b949e}
-  .cmd-copy{background:#21262d;border:none;color:#8b949e;font-size:.62rem;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:4px;cursor:pointer}
-  .cmd-copy:hover{background:#30363d;color:#c9d1d9}
-  .cmd-body{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#c9d1d9;padding:14px;line-height:1.9;white-space:pre}
-  .cmd-empty{color:#484f58;font-style:italic}
-  .domain-block{background:#0d1117;border:1px solid #21262d;border-radius:var(--radius-sm);padding:10px 12px;margin-top:8px}
-  .domain-line{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:#7ee787;line-height:1.75}
-  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--text-primary);color:white;padding:9px 18px;border-radius:100px;font-size:.77rem;font-weight:500;opacity:0;pointer-events:none;transition:all .22s;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.2)}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  @media(max-width:900px){
-    .clash-layout{grid-template-columns:1fr}
-    .direct-layout{grid-template-columns:1fr}
-    .mode-cards{grid-template-columns:1fr}
-    .hero{padding:40px 1.5rem 28px}
-    nav{padding:0 1rem}
-    .main,.mode-wrap{padding-left:1rem;padding-right:1rem}
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18; --surface: #242422; --surface2: #2c2c2a;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --text: #e8e8e2; --text2: #9b9b96; --text3: #6b6b67;
+      --accent: #7F77DD; --accent-light: #26215C; --accent-text: #AFA9EC;
+      --success: #5DCAA5; --success-light: #04342C;
+      --warning: #EF9F27; --warning-light: #412402;
+      --danger: #F09595; --danger-light: #501313;
+    }
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    height: 100vh; display: flex; flex-direction: column;
+    font-size: 14px; line-height: 1.6;
+  }
+  .header {
+    background: var(--surface); border-bottom: 0.5px solid var(--border);
+    padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .header-logo {
+    width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 18px; height: 18px; fill: white; }
+  .header-title { font-size: 15px; font-weight: 500; }
+  .header-sub { font-size: 12px; color: var(--text2); }
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .status-group { display: flex; align-items: center; gap: 6px; }
+  .status-label { font-size: 12px; color: var(--text2); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; transition: background 0.3s; }
+  .status-dot.ok { background: var(--success); }
+  .status-dot.err { background: var(--danger); }
+  .status-dot.busy { background: var(--warning); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .config-btn {
+    font-size: 12px; padding: 5px 12px; border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border2); background: transparent;
+    color: var(--text2); cursor: pointer; transition: background 0.15s;
+  }
+  .config-btn:hover { background: var(--surface2); }
+  .main { flex: 1; display: flex; overflow: hidden; }
+  .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .messages {
+    flex: 1; overflow-y: auto; padding: 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; color: var(--text3); text-align: center;
+  }
+  .empty-icon {
+    width: 52px; height: 52px; background: var(--accent-light);
+    border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  }
+  .empty-icon svg { width: 26px; height: 26px; fill: var(--accent); }
+  .empty-state h2 { font-size: 16px; font-weight: 500; color: var(--text2); }
+  .empty-state p { font-size: 13px; max-width: 340px; line-height: 1.7; }
+  .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; }
+  .quick-btn {
+    background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: 20px; padding: 6px 14px; font-size: 12px;
+    color: var(--text2); cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  }
+  .quick-btn:hover { border-color: var(--accent); color: var(--accent-text); }
+  .msg { display: flex; gap: 10px; max-width: 100%; }
+  .msg.user { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 500; flex-shrink: 0; margin-top: 2px;
+  }
+  .msg.user .msg-avatar { background: var(--accent); color: white; }
+  .msg.assistant .msg-avatar { background: var(--accent-light); color: var(--accent-text); }
+  .msg-body { display: flex; flex-direction: column; gap: 6px; max-width: calc(100% - 44px); }
+  .msg.user .msg-body { align-items: flex-end; }
+  .msg-bubble {
+    padding: 10px 14px; border-radius: var(--radius);
+    font-size: 14px; line-height: 1.6; word-break: break-word;
+  }
+  .msg.user .msg-bubble { background: var(--accent); color: white; border-bottom-right-radius: 3px; }
+  .msg.assistant .msg-bubble {
+    background: var(--surface); border: 0.5px solid var(--border);
+    color: var(--text); border-bottom-left-radius: 3px;
+  }
+  .msg-bubble p { margin-bottom: 8px; }
+  .msg-bubble p:last-child { margin-bottom: 0; }
+  .msg-bubble ul, .msg-bubble ol { padding-left: 18px; margin: 6px 0; }
+  .msg-bubble li { margin-bottom: 3px; }
+  .msg-bubble code {
+    background: rgba(0,0,0,0.07); border-radius: 3px;
+    padding: 1px 5px; font-family: monospace; font-size: 12px;
+  }
+  .msg.user .msg-bubble code { background: rgba(255,255,255,0.2); }
+  .msg-bubble h3 { font-size: 14px; font-weight: 500; margin: 8px 0 4px; }
+  .tool-card {
+    background: var(--surface2); border: 0.5px solid var(--border);
+    border-left: 2px solid var(--accent); border-radius: var(--radius-sm);
+    padding: 8px 12px; font-size: 12px;
+  }
+  .tool-card.ok { border-left-color: var(--success); }
+  .tool-card.err { border-left-color: var(--danger); }
+  .tool-card.running { border-left-color: var(--warning); }
+  .tool-card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .tool-tag {
+    font-family: monospace; font-size: 11px; font-weight: 500;
+    background: var(--accent-light); color: var(--accent-text);
+    border-radius: 3px; padding: 1px 6px;
+  }
+  .tool-card.ok .tool-tag { background: var(--success-light); color: var(--success); }
+  .tool-card.err .tool-tag { background: var(--danger-light); color: var(--danger); }
+  .tool-card.running .tool-tag { background: var(--warning-light); color: var(--warning); }
+  .tool-group-text { font-size: 11px; color: var(--text3); }
+  .tool-args {
+    font-family: monospace; font-size: 11px; color: var(--text3);
+    white-space: pre-wrap; word-break: break-all; max-height: 60px; overflow-y: auto;
+  }
+  .thinking {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--text2); font-size: 13px;
+  }
+  .dots { display: flex; gap: 4px; }
+  .dot {
+    width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+  .input-area {
+    padding: 14px 20px; background: var(--surface);
+    border-top: 0.5px solid var(--border); flex-shrink: 0;
+  }
+  .input-row { display: flex; gap: 8px; align-items: flex-end; }
+  .input-wrap {
+    flex: 1; background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: var(--radius); transition: border-color 0.15s;
+  }
+  .input-wrap:focus-within { border-color: var(--accent); }
+  #user-input {
+    width: 100%; background: transparent; border: none; outline: none;
+    color: var(--text); font-size: 14px; padding: 10px 14px;
+    resize: none; font-family: inherit; line-height: 1.5;
+    max-height: 120px; min-height: 42px;
+  }
+  .send-btn {
+    width: 40px; height: 40px; background: var(--accent); border: none;
+    border-radius: var(--radius-sm); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .send-btn:hover { opacity: 0.85; }
+  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .send-btn svg { width: 18px; height: 18px; fill: white; }
+  .input-hint { font-size: 11px; color: var(--text3); margin-top: 5px; text-align: right; }
+  .side-panel {
+    width: 270px; background: var(--surface); border-left: 0.5px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
+  }
+  .panel-section { display: flex; flex-direction: column; overflow: hidden; }
+  .panel-section.grow { flex: 1; min-height: 0; }
+  .panel-head {
+    padding: 10px 14px; border-bottom: 0.5px solid var(--border);
+    font-size: 11px; font-weight: 500; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.05em;
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .panel-body { overflow-y: auto; padding: 10px; }
+  .badge {
+    display: inline-block; font-size: 10px; padding: 1px 7px;
+    border-radius: 10px; font-weight: 500; text-transform: none; letter-spacing: 0;
+  }
+  .badge-purple { background: var(--accent-light); color: var(--accent-text); }
+  .badge-gray { background: var(--surface2); color: var(--text2); border: 0.5px solid var(--border); }
+  .tool-list { display: flex; flex-direction: column; gap: 2px; }
+  .tool-group-label {
+    font-size: 10px; font-weight: 500; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 6px 3px;
+  }
+  .tool-item { padding: 5px 8px; border-radius: var(--radius-sm); cursor: default; }
+  .tool-item:hover { background: var(--surface2); }
+  .tool-item-name { font-family: monospace; font-size: 11px; color: var(--accent-text); font-weight: 500; }
+  .tool-item-desc { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .call-log { display: flex; flex-direction: column; gap: 5px; }
+  .log-item {
+    padding: 5px 8px; border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border); font-size: 11px;
+  }
+  .log-item.ok { border-left: 2px solid var(--success); }
+  .log-item.err { border-left: 2px solid var(--danger); }
+  .log-item .fn { font-family: monospace; color: var(--accent-text); font-weight: 500; }
+  .log-item .meta { color: var(--text3); font-size: 10px; margin-top: 1px; }
+  .sys-msg { text-align: center; font-size: 12px; color: var(--text3); padding: 2px 0; }
+  .overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    align-items: center; justify-content: center; z-index: 50;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: var(--radius); padding: 24px;
+    width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-title { font-size: 16px; font-weight: 500; margin-bottom: 20px; }
+  .section-label {
+    font-size: 11px; font-weight: 500; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 12px; padding-bottom: 6px; border-bottom: 0.5px solid var(--border);
+  }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; }
+  .form-row input, .form-row select {
+    width: 100%; background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm); color: var(--text); font-size: 13px;
+    padding: 8px 10px; outline: none;
+  }
+  .form-row input { font-family: monospace; }
+  .form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+  .form-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .divider { height: 0.5px; background: var(--border); margin: 20px 0; }
+  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  .btn-primary {
+    background: var(--accent); color: white; border: none;
+    border-radius: var(--radius-sm); padding: 8px 18px; font-size: 13px; cursor: pointer;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-cancel {
+    background: transparent; color: var(--text2); border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm); padding: 8px 18px; font-size: 13px; cursor: pointer;
+  }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  @media (max-width: 680px) { .side-panel { display: none; } }
+  .error-details {
+    background: var(--danger-light);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--danger);
   }
 </style>
 </head>
 <body>
 
-<nav>
-  <a href="#" class="nav-brand">
-    <div class="nav-brand-icon"><svg viewBox="0 0 16 16"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z"/></svg></div>
-    ProxyFusion
-  </a>
-  <div class="nav-links">
-    <a href="#" class="nav-link">定价</a>
-    <a href="#" class="nav-link">文档</a>
-    <a href="#" class="nav-link">登录</a>
-    <button class="btn-nav">注册</button>
+<div class="header">
+  <div class="header-logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
   </div>
-</nav>
-
-<div class="hero">
-  <div class="hero-badge"><div class="badge-dot"></div>双层代理链 · 机场+住宅IP · Claude Code</div>
-  <h1>让 Claude Code<br><em>走机场 + 住宅 IP 双层出口</em></h1>
-  <p>先通过机场节点，再经过住宅 SOCKS5 代理，Anthropic 看到的永远是真实住宅 IP，同时保留机场的访问能力。</p>
-</div>
-
-<div class="mode-wrap">
-  <div class="mode-label">选择你的使用方式</div>
-  <div class="mode-cards">
-    <div class="mode-card clash active" id="modeClash" onclick="switchMode('clash')">
-      <div class="mode-card-icon">🛡️</div>
-      <div class="mode-card-body">
-        <div class="mode-card-title">配合 Clash 使用（双层代理链）</div>
-        <div class="mode-card-desc">已有机场 + Clash Verge，生成融合 YAML。流量路径：<strong>机场节点 → 住宅 SOCKS5 → Claude</strong></div>
-      </div>
+  <div>
+    <div class="header-title">ITSM AI 助手</div>
+    <div class="header-sub">MCP + 阿里云百炼</div>
+  </div>
+  <div class="header-right">
+    <div class="status-group">
+      <div class="status-dot" id="mcp-dot"></div>
+      <span class="status-label" id="mcp-label">MCP 未连接</span>
     </div>
-    <div class="mode-card direct" id="modeDirect" onclick="switchMode('direct')">
-      <div class="mode-card-icon">⚡</div>
-      <div class="mode-card-body">
-        <div class="mode-card-title">直接在终端使用</div>
-        <div class="mode-card-desc">无需 Clash，生成一行命令写入终端配置，直接 <code class="pill">claude</code> 即可。住宅 IP 协议：<strong>HTTP/HTTPS</strong></div>
-      </div>
+    <div class="status-group">
+      <div class="status-dot" id="llm-dot"></div>
+      <span class="status-label" id="llm-label">LLM 未配置</span>
     </div>
+    <button class="config-btn" onclick="openModal()">配置</button>
   </div>
 </div>
 
 <div class="main">
-  <!-- CLASH MODE -->
-  <div class="layout-panel active" id="panelClash">
-    <div class="clash-layout">
-      <div class="card">
-        <div class="card-top">
-          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M1.5 12h11" stroke="#0d0d0c" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div><div class="card-title">1. 导入现有 Clash 配置</div><div class="card-sub">保留你的机场节点和全部规则</div></div>
+  <div class="chat-area">
+    <div class="messages" id="messages">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
         </div>
-        <div class="card-body">
-          <div class="field">
-            <label>粘贴 YAML 配置内容</label>
-            <textarea id="existingConfig" placeholder="# 粘贴你的完整 Clash 配置（包含机场节点）&#10;# Clash Verge → 配置 → 右键 → 编辑&#10;&#10;port: 7890&#10;proxies:&#10;  - name: &quot;机场节点1&quot;&#10;    type: ss&#10;    server: xxx&#10;    ..."></textarea>
-          </div>
-          <div class="field">
-            <label>或上传 .yaml 文件</label>
-            <div class="file-drop" id="dropZone" onclick="document.getElementById('fileInput').click()">
-              <div style="font-size:1.1rem">📄</div>
-              <input type="file" id="fileInput" accept=".yaml,.yml,.txt">
-              <div style="font-size:.74rem;margin-top:3px">点击或拖拽上传</div>
-              <div class="file-drop-text" id="fileName">未选择文件</div>
-            </div>
-          </div>
-          <div class="info-note">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#2563eb" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/></svg>
-            无现有配置可跳过，将生成只含住宅 IP 的基础配置
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-top">
-          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><path d="M7 1C4.24 1 2 3.24 2 6c0 1.9 1.05 3.56 2.6 4.43L7 13l2.4-2.57C10.95 9.56 12 7.9 12 6c0-2.76-2.24-5-5-5z" stroke="#0d0d0c" stroke-width="1.3"/><circle cx="7" cy="6" r="1.5" stroke="#0d0d0c" stroke-width="1.3"/></svg></div>
-          <div><div class="card-title">2. 住宅 IP 信息（SOCKS5）</div><div class="card-sub">填入购买后获得的连接参数</div></div>
-        </div>
-        <div class="card-body">
-          <div class="field-row">
-            <div class="field"><label>服务器地址</label><input type="text" id="c_server" placeholder="IP 或域名"></div>
-            <div class="field"><label>端口</label><input type="number" id="c_port" placeholder="1080"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>用户名（可选）</label><input type="text" id="c_user" placeholder="username" autocomplete="off"></div>
-            <div class="field"><label>密码（可选）</label><input type="password" id="c_pass" placeholder="password" autocomplete="off"></div>
-          </div>
-          <div class="toggle-row" style="margin-top:4px">
-            <label class="toggle"><input type="checkbox" id="enableTun" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
-            <span class="toggle-label">在 YAML 中注入 TUN 模式配置</span>
-          </div>
-          <div class="info-note" style="margin-top:2px;background:var(--green-soft);border-color:#bbf7d0;color:#166534">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>
-            <span><strong>双层代理链说明（dialer-proxy）：</strong>流量路径为 <strong>机场节点 → 住宅 SOCKS5 代理 → Claude</strong><br>导入 YAML 后，在 Clash Verge 开启<strong>「虚拟网卡模式（TUN）」</strong>，之后直接输 <code class="pill" style="background:rgba(0,0,0,.08)">claude</code> 即通过双层代理访问。</span>
-          </div>
-          <button class="btn-primary" id="generateBtn" style="margin-top:14px">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            生成融合配置（dialer-proxy双层链）
-          </button>
-          <div class="status-badge" id="clashStatus"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-top">
-          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><rect x="2" y="1.5" width="10" height="11" rx="2" stroke="#0d0d0c" stroke-width="1.3"/><path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="#0d0d0c" stroke-width="1.1" stroke-linecap="round"/></svg></div>
-          <div><div class="card-title">3. 融合结果</div><div class="card-sub">下载 YAML 拖入 Clash 完成导入</div></div>
-        </div>
-        <div class="card-body">
-          <div class="tab-bar">
-            <button class="tab-btn active" data-tab="cyaml">YAML 配置</button>
-            <button class="tab-btn" data-tab="cguide">使用说明</button>
-          </div>
-          <div class="tab-panel active" id="tab-cyaml">
-            <div class="yaml-wrap">
-              <div class="yaml-header">
-                <div class="yd-wrap"><div class="yd r"></div><div class="yd y"></div><div class="yd g"></div></div>
-                <div class="yaml-label">proxy_fusion_config.yaml（dialer-proxy双层链）</div>
-              </div>
-              <div class="yaml-body" id="yamlPreview"><span class="yaml-empty"># 点击"生成融合配置（dialer-proxy双层链）"后显示结果</span></div>
-            </div>
-            <div class="action-row">
-              <button class="btn-secondary" id="copyYamlBtn"><svg viewBox="0 0 12 12" fill="none"><rect x="1" y="3" width="7" height="8" rx="1.5" stroke="currentColor" stroke-width="1.1"/><path d="M4 1h6a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>复制</button>
-              <button class="btn-secondary" id="downloadBtn"><svg viewBox="0 0 12 12" fill="none"><path d="M6 1v6M3.5 5l2.5 2.5L8.5 5M1.5 10h9" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>下载 YAML</button>
-            </div>
-            <div class="drag-guide">
-              <div class="drag-guide-step"><div class="drag-guide-num">1</div><div>点击「下载 YAML」保存文件到本地</div></div>
-              <div class="drag-guide-arrow">↓</div>
-              <div class="drag-guide-step"><div class="drag-guide-num">2</div><div>打开 <strong>Clash Verge → 配置页</strong>，将文件<strong>拖入</strong>列表即完成导入</div></div>
-            </div>
-          </div>
-          <div class="tab-panel" id="tab-cguide">
-            <div class="section-label">双层代理链使用步骤（dialer-proxy）</div>
-            <ul class="guide-steps">
-              <li><span class="gsn">1</span>填写住宅 IP 的 SOCKS5 信息，点击「生成融合配置（dialer-proxy双层链）」</li>
-              <li><span class="gsn">2</span>下载 YAML，拖入 Clash Verge 配置页完成导入</li>
-              <li><span class="gsn">3</span>切换到该配置，确认「代理」页有 <code class="pill">claude-chain</code> 组（select 类型）</li>
-              <li><span class="gsn">4</span>Clash Verge → 设置 → 开启<strong>「虚拟网卡模式（TUN）」</strong></li>
-              <li><span class="gsn">5</span>直接在终端输入 <code class="pill">claude</code>，流量自动走：机场 → 住宅代理 → Claude ✓</li>
-            </ul>
-            <div class="guide-tip">
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>
-              <span><strong>验证出口 IP：</strong><code class="pill">curl --proxy http://127.0.0.1:7890 https://api.ipify.org</code>，返回你的住宅 IP 即成功 ✓</span>
-            </div>
-            <hr class="divider">
-            <div class="section-label">覆盖的域名</div>
-            <div class="domain-block">
-              <div class="domain-line">api.anthropic.com → claude-chain（双层链）</div>
-              <div class="domain-line">statsig.anthropic.com → claude-chain</div>
-              <div class="domain-line">anthropic.com → claude-chain</div>
-              <div class="domain-line">claude.ai → claude-chain</div>
-              <div class="domain-line">claudeusercontent.com → claude-chain</div>
-            </div>
-          </div>
+        <h2>ITSM AI 智能助手</h2>
+        <p>点击右上角「配置」，分别填写 MCP 服务信息和百炼 API Key，连接后即可用自然语言查询 ITSM 平台。</p>
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="sendQuick('查询最近即将违反SLA的事件工单')">SLA 告警工单</button>
+          <button class="quick-btn" onclick="sendQuick('帮我ping一下设备ID为1的设备，看看是否在线')">ping 设备</button>
+          <button class="quick-btn" onclick="sendQuick('搜索关于网络故障排查的知识库文章')">搜索知识库</button>
+          <button class="quick-btn" onclick="sendQuick('获取工单的可查询字段列表')">工单字段列表</button>
         </div>
       </div>
     </div>
+    <div class="input-area">
+      <div class="input-row">
+        <div class="input-wrap">
+          <textarea id="user-input"
+            placeholder="输入问题，例如：帮我查询设备1的最新告警信息..."
+            rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        </div>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Enter 发送 · Shift+Enter 换行</div>
+    </div>
   </div>
 
-  <!-- DIRECT MODE -->
-  <div class="layout-panel" id="panelDirect">
-    <div class="direct-layout">
-      <div class="card">
-        <div class="card-top">
-          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><path d="M7 1C4.24 1 2 3.24 2 6c0 1.9 1.05 3.56 2.6 4.43L7 13l2.4-2.57C10.95 9.56 12 7.9 12 6c0-2.76-2.24-5-5-5z" stroke="#0d0d0c" stroke-width="1.3"/><circle cx="7" cy="6" r="1.5" stroke="#0d0d0c" stroke-width="1.3"/></svg></div>
-          <div><div class="card-title">1. 住宅 IP 信息（HTTP/HTTPS）</div><div class="card-sub">填入购买后获得的 HTTP 代理参数</div></div>
-        </div>
-        <div class="card-body">
-          <div class="field-row">
-            <div class="field"><label>HTTP 代理地址</label><input type="text" id="d_http_server" placeholder="148.135.17.24"></div>
-            <div class="field"><label>HTTP 端口</label><input type="number" id="d_http_port" placeholder="3128"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>HTTPS 代理地址</label><input type="text" id="d_https_server" placeholder="148.135.17.24"></div>
-            <div class="field"><label>HTTPS 端口</label><input type="number" id="d_https_port" placeholder="3129"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>用户名（可选）</label><input type="text" id="d_user" placeholder="username" autocomplete="off"></div>
-            <div class="field"><label>密码（可选）</label><input type="password" id="d_pass" placeholder="password" autocomplete="off"></div>
-          </div>
-          <button class="btn-primary" id="generateCmdBtn" style="margin-top:8px">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 6.5l3 3 6-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            生成配置命令
-          </button>
-          <div class="status-badge" id="directStatus"></div>
+  <div class="side-panel">
+    <div class="panel-section grow">
+      <div class="panel-head">
+        <span>MCP 工具</span>
+        <span class="badge badge-purple" id="tool-count">0</span>
+      </div>
+      <div class="panel-body">
+        <div class="tool-list" id="tool-list">
+          <div style="font-size:12px;color:var(--text3);padding:6px">连接 MCP 后显示</div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-top">
-          <div class="card-icon"><svg viewBox="0 0 14 14" fill="none"><rect x="1.5" y="2" width="11" height="10" rx="2" stroke="#0d0d0c" stroke-width="1.3"/><path d="M4 5l2.5 2.5L4 10M8 10h2" stroke="#0d0d0c" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <div><div class="card-title">2. 终端配置命令</div><div class="card-sub">写入 ~/.zshrc，永久生效</div></div>
-        </div>
-        <div class="card-body">
-          <div class="cmd-box">
-            <div class="cmd-header">
-              <div class="cmd-label">~/.zshrc</div>
-              <button class="cmd-copy" id="copyCmdBtn">复制</button>
-            </div>
-            <div class="cmd-body" id="cmdPreview"><span class="cmd-empty"># 填写左侧代理信息后自动生成</span></div>
-          </div>
-          <div class="info-note" style="margin-top:10px">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#2563eb" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#2563eb" stroke-width="1.2" stroke-linecap="round"/></svg>
-            <span>复制后粘贴到终端执行（一次即可），之后直接输 <code class="pill">claude</code> 即走住宅 IP。</span>
-          </div>
-          <hr class="divider">
-          <div class="section-label">使用步骤</div>
-          <ul class="guide-steps">
-            <li><span class="gsn">1</span>填写左侧 HTTP/HTTPS 代理信息，点击「生成配置命令」</li>
-            <li><span class="gsn">2</span>点击「复制」，在终端粘贴并执行（写入 ~/.zshrc）</li>
-            <li><span class="gsn">3</span>运行 <code class="pill">source ~/.zshrc</code> 使配置立即生效</li>
-            <li><span class="gsn">4</span>直接输入 <code class="pill">claude</code>，流量自动走住宅 IP ✓</li>
-          </ul>
-          <div class="guide-tip">
-            <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="5.5" stroke="#16a34a" stroke-width="1.2"/><path d="M6.5 6v3M6.5 4v.5" stroke="#16a34a" stroke-width="1.2" stroke-linecap="round"/></svg>
-            <span><strong>验证：</strong>执行后运行 <code class="pill">curl https://api.ipify.org</code>，返回你的住宅 IP 即成功 ✓</span>
-          </div>
+    </div>
+    <div class="panel-section" style="border-top:0.5px solid var(--border)">
+      <div class="panel-head">
+        <span>工具调用记录</span>
+        <span class="badge badge-gray" id="call-count">0</span>
+      </div>
+      <div class="panel-body" style="max-height:200px">
+        <div class="call-log" id="call-log">
+          <div style="font-size:12px;color:var(--text3)">暂无记录</div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- Config Modal -->
+<div class="overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-title">连接配置</div>
+
+    <div class="section-label">MCP 服务（你的 ITSM 平台）</div>
+    <div class="form-row">
+      <label>MCP 服务地址</label>
+      <input type="text" id="cfg-mcp-url" placeholder="https://demo.logicalisservice.com/api/ai/mcp" />
+      <div class="form-hint">ITSM 平台暴露的 MCP JSON-RPC 接口地址</div>
+    </div>
+    <div class="form-row">
+      <label>AIKey</label>
+      <input type="password" id="cfg-mcp-key" placeholder="ccd1ce0a-52bc-426e-a33f-dbbf2df39ae7" />
+      <div class="form-hint">ITSM 平台颁发的鉴权 Key，通过请求头 AIKey 传递</div>
+    </div>
+    <div class="form-row">
+      <label>Cookie (可选)</label>
+      <input type="text" id="cfg-mcp-cookie" placeholder="ARRAffinity_demo=xxx; ARRAffinity_demo=xxx" />
+      <div class="form-hint">如果需要 Cookie 认证，在此填写</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-label">阿里云百炼 LLM（独立配置）</div>
+    <div class="form-row">
+      <label>百炼 API Key</label>
+      <input type="password" id="cfg-llm-key" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx" />
+      <div class="form-hint">
+        在 <a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" style="color:var(--accent)">百炼控制台</a> 获取
+      </div>
+    </div>
+    <div class="form-row">
+      <label>模型 ID</label>
+      <select id="cfg-llm-model">
+        <option value="qwen-max">qwen-max（推荐，工具调用最强）</option>
+        <option value="qwen-plus">qwen-plus（均衡）</option>
+        <option value="qwen-turbo">qwen-turbo（快速）</option>
+        <option value="qwen-long">qwen-long（超长上下文）</option>
+        <option value="qwen-max-latest">qwen-max-latest（最新版）</option>
+        <option value="qwen-plus-latest">qwen-plus-latest（最新均衡版）</option>
+      </select>
+      <div class="form-hint">支持输入自定义模型 ID，如 qwen-max-2025-04-01</div>
+    </div>
+    <div class="form-row">
+      <label>自定义模型 ID（可选）</label>
+      <input type="text" id="cfg-llm-model-custom" placeholder="例如: qwen-max-2025-04-01" />
+      <div class="form-hint">如果选择自定义，将优先使用此 ID</div>
+    </div>
+    <div class="form-row">
+      <label>百炼 API 地址</label>
+      <input type="text" id="cfg-llm-url" value="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" />
+      <div class="form-hint">使用 OpenAI 兼容模式，通常无需修改</div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-primary" onclick="saveAndConnect()">保存并连接 MCP</button>
+    </div>
+  </div>
+</div>
 
 <script>
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200)}
-function showStatus(id,type,msg){const el=document.getElementById(id);el.className='status-badge '+type;el.innerHTML=(type==='success'?'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="#16a34a" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>':'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#dc2626" stroke-width="1.2"/><path d="M6 4v2.5M6 8v.5" stroke="#dc2626" stroke-width="1.2" stroke-linecap="round"/></svg>')+esc(msg)}
-async function copyText(t){try{await navigator.clipboard.writeText(t);showToast('✓ 已复制到剪贴板')}catch{showToast('复制失败，请手动选取')}}
+const state = {
+  mcpUrl: '', mcpKey: '', mcpCookie: '',
+  llmKey: '', llmModel: 'qwen-max', llmModelCustom: '',
+  llmUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+  tools: [], history: [], callCount: 0,
+  mcpOk: false, llmOk: false, busy: false
+};
 
-function switchMode(mode){
-  document.getElementById('modeClash').classList.toggle('active', mode==='clash');
-  document.getElementById('modeDirect').classList.toggle('active', mode==='direct');
-  document.getElementById('panelClash').classList.toggle('active', mode==='clash');
-  document.getElementById('panelDirect').classList.toggle('active', mode==='direct');
+const SYSTEM_PROMPT = `你是一个专业的 ITSM（IT 服务管理）智能助手，连接了 Gemmb 平台的 MCP 工具集。
+你可以帮助用户查询/创建/更新工单（事件、问题、变更、请求），查询设备状态和告警，搜索知识库，查询 SLA 状态。
+原则：用中文回复；调用工具前简短说明意图；以清晰方式呈现结果；数据全部来自工具，不编造；遇错误给出建议。`;
+
+function getActualModel() {
+  if (state.llmModelCustom && state.llmModelCustom.trim()) {
+    return state.llmModelCustom.trim();
+  }
+  return state.llmModel;
 }
 
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const tab=btn.dataset.tab;
-    const bar=btn.closest('.tab-bar');
-    bar.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b===btn));
-    const card=bar.closest('.card-body');
-    card.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+tab));
-  });
-});
-
-async function loadFile(file){
-  document.getElementById('existingConfig').value=await file.text();
-  document.getElementById('fileName').textContent=file.name;
-  showToast('✓ 已加载：'+file.name);
+function openModal() {
+  document.getElementById('cfg-mcp-url').value = state.mcpUrl;
+  document.getElementById('cfg-mcp-key').value = state.mcpKey;
+  document.getElementById('cfg-mcp-cookie').value = state.mcpCookie;
+  document.getElementById('cfg-llm-key').value = state.llmKey;
+  document.getElementById('cfg-llm-model').value = state.llmModel;
+  document.getElementById('cfg-llm-model-custom').value = state.llmModelCustom;
+  document.getElementById('cfg-llm-url').value = state.llmUrl;
+  document.getElementById('modal-overlay').classList.add('open');
 }
-document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])loadFile(e.target.files[0])});
-const dz=document.getElementById('dropZone');
-dz.addEventListener('dragover',e=>{e.preventDefault();dz.style.borderColor='var(--text-primary)'});
-dz.addEventListener('dragleave',()=>{dz.style.borderColor=''});
-dz.addEventListener('drop',e=>{e.preventDefault();dz.style.borderColor='';if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0])});
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 
-const CLAUDE_RULES=[
-  'DOMAIN-SUFFIX,api.anthropic.com,claude-chain',
-  'DOMAIN-SUFFIX,statsig.anthropic.com,claude-chain',
-  'DOMAIN-SUFFIX,anthropic.com,claude-chain',
-  'DOMAIN-SUFFIX,claude.ai,claude-chain',
-  'DOMAIN-SUFFIX,claudeusercontent.com,claude-chain',
-];
-const CLAUDE_KW=['api.anthropic','statsig.anthropic','anthropic.com','claude.ai','claudeusercontent'];
+async function saveAndConnect() {
+  state.mcpUrl   = document.getElementById('cfg-mcp-url').value.trim();
+  state.mcpKey   = document.getElementById('cfg-mcp-key').value.trim();
+  state.mcpCookie = document.getElementById('cfg-mcp-cookie').value.trim();
+  state.llmKey   = document.getElementById('cfg-llm-key').value.trim();
+  state.llmModel = document.getElementById('cfg-llm-model').value;
+  state.llmModelCustom = document.getElementById('cfg-llm-model-custom').value.trim();
+  state.llmUrl   = document.getElementById('cfg-llm-url').value.trim();
+  closeModal();
 
-// 使用 dialer-proxy 方式实现代理链（Clash Verge Rev 官方推荐）
-function mergeConfigs(originalYaml, server, port, user, pass, injectTun){
-  let cfg;
-  if(!originalYaml||!originalYaml.trim()){
-    cfg={port:7890,'socks-port':7891,'allow-lan':false,mode:'rule','log-level':'info',
-         proxies:[],'proxy-groups':[],rules:['MATCH,DIRECT']};
+  // Update LLM status independently
+  const llmDot = document.getElementById('llm-dot');
+  const llmLabel = document.getElementById('llm-label');
+  if (state.llmKey) {
+    state.llmOk = true;
+    llmDot.className = 'status-dot ok';
+    llmLabel.textContent = getActualModel();
   } else {
-    cfg=jsyaml.load(originalYaml);
-    if(typeof cfg!=='object'||cfg===null) throw new Error('无效的 YAML 格式');
-    if(!Array.isArray(cfg.proxies)) cfg.proxies=[];
-    if(!Array.isArray(cfg['proxy-groups'])) cfg['proxy-groups']=[];
-    if(!Array.isArray(cfg.rules)) cfg.rules=['MATCH,DIRECT'];
+    state.llmOk = false;
+    llmDot.className = 'status-dot';
+    llmLabel.textContent = 'LLM 未配置';
   }
-  
-  if(injectTun){
-    cfg.tun={enable:true,stack:'system','auto-route':true,
-             'auto-detect-interface':true,'dns-hijack':['any:53'],'strict-route':false};
-    if(!cfg.dns)
-      cfg.dns={enable:true,listen:'0.0.0.0:1053','enhanced-mode':'fake-ip',
-               'fake-ip-range':'198.18.0.1/16',
-               nameserver:['8.8.8.8','1.1.1.1'],
-               fallback:['tls://1.1.1.1:853','tls://8.8.8.8:853']};
-  }
-  
-  // 1. 查找用户现有的代理选择组（机场组）
-  let airportGroup = null;
-  for(const g of cfg['proxy-groups']){
-    if(g.type === 'select' && g.proxies && g.proxies.length > 0 && g.name !== 'claude-chain'){
-      airportGroup = g;
-      break;
-    }
-  }
-  
-  // 2. 如果没有找到现成的代理组，但存在代理节点，创建一个
-  if(!airportGroup){
-    const existingProxyNames = cfg.proxies.filter(p => p.name !== 'residential-exit').map(p => p.name);
-    if(existingProxyNames.length > 0){
-      const groupName = 'airport-nodes';
-      if(!cfg['proxy-groups'].find(g => g.name === groupName)){
-        cfg['proxy-groups'].push({
-          name: groupName,
-          type: 'select',
-          proxies: existingProxyNames
-        });
-        airportGroup = cfg['proxy-groups'].find(g => g.name === groupName);
-      }
-    }
-  }
-  
-  // 3. 创建住宅 SOCKS5 代理节点
-  const residentialNode={
-    name:'residential-exit',
-    type:'socks5',
-    server:server,
-    port:Number(port)
-  };
-  if(user) residentialNode.username=user;
-  if(pass) residentialNode.password=pass;
-  
-  // 4. 关键：如果有机场组，给住宅代理节点设置 dialer-proxy 属性，指向机场组
-  if(airportGroup){
-    residentialNode['dialer-proxy'] = airportGroup.name;
-  }
-  
-  // 5. 添加住宅代理节点（替换旧的）
-  cfg.proxies = cfg.proxies.filter(p => p.name !== 'residential-exit');
-  cfg.proxies.push(residentialNode);
-  
-  // 6. 移除旧的 claude-chain 组
-  cfg['proxy-groups'] = cfg['proxy-groups'].filter(g => g.name !== 'claude-chain');
-  
-  // 7. 创建 claude-chain 选择组，让用户可以选择住宅代理作为出口
-  cfg['proxy-groups'].push({
-    name: 'claude-chain',
-    type: 'select',
-    proxies: ['residential-exit']
-  });
-  
-  // 8. 添加 Claude 域名规则
-  cfg.rules = cfg.rules.filter(r => !CLAUDE_KW.some(k => r.includes(k)));
-  cfg.rules = [...CLAUDE_RULES, ...cfg.rules];
-  
-  return jsyaml.dump(cfg,{lineWidth:140});
+
+  // Connect MCP independently
+  await connectMcp();
+  refreshSendBtn();
 }
 
-let currentYaml=null;
-document.getElementById('generateBtn').addEventListener('click',()=>{
-  const server=document.getElementById('c_server').value.trim();
-  const port=document.getElementById('c_port').value.trim();
-  if(!server||!port){showStatus('clashStatus','error','请填写服务器地址和端口');return}
-  if(isNaN(Number(port))||Number(port)<1||Number(port)>65535){showStatus('clashStatus','error','端口号无效');return}
-  try{
-    const yaml=mergeConfigs(
-      document.getElementById('existingConfig').value,
-      server, port,
-      document.getElementById('c_user').value.trim(),
-      document.getElementById('c_pass').value,
-      document.getElementById('enableTun').checked
-    );
-    currentYaml=yaml;
-    document.getElementById('yamlPreview').textContent=yaml;
-    showStatus('clashStatus','success','dialer-proxy 双层代理链配置生成成功！流量路径：机场节点 → 住宅代理');
-    document.querySelectorAll('#tab-cyaml,#tab-cguide').forEach(p=>p.classList.toggle('active',p.id==='tab-cyaml'));
-    document.querySelectorAll('[data-tab="cyaml"],[data-tab="cguide"]').forEach(b=>b.classList.toggle('active',b.dataset.tab==='cyaml'));
-  }catch(err){showStatus('clashStatus','error','生成失败：'+err.message)}
-});
-
-document.getElementById('copyYamlBtn').addEventListener('click',()=>{
-  if(!currentYaml){showToast('请先生成配置');return}
-  copyText(currentYaml);
-});
-document.getElementById('downloadBtn').addEventListener('click',()=>{
-  if(!currentYaml){showToast('请先生成配置');return}
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([currentYaml],{type:'application/x-yaml'}));
-  a.download='proxy_fusion_double_layer.yaml';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);
-  showToast('✓ 已下载配置文件');
-});
-
-// DIRECT MODE
-let currentCmd=null;
-document.getElementById('generateCmdBtn').addEventListener('click',()=>{
-  const hs =document.getElementById('d_https_server').value.trim();
-  const hp =document.getElementById('d_https_port').value.trim();
-  const s  =document.getElementById('d_http_server').value.trim();
-  const p  =document.getElementById('d_http_port').value.trim();
-  const user=document.getElementById('d_user').value.trim();
-  const pass=document.getElementById('d_pass').value;
-
-  if((!s||!p)&&(!hs||!hp)){showStatus('directStatus','error','请至少填写一组代理地址和端口');return}
-
-  function buildUrl(scheme,srv,prt){
-    if(!srv||!prt) return null;
-    const auth=(user&&pass)?`${encodeURIComponent(user)}:${encodeURIComponent(pass)}@`:(user?`${encodeURIComponent(user)}@`:'');
-    return `${scheme}://${auth}${srv}:${prt}`;
+async function connectMcp() {
+  if (!state.mcpUrl || !state.mcpKey) {
+    addSysMsg('⚠️ 请填写 MCP 服务地址和 AIKey。');
+    return;
   }
-  const httpUrl =buildUrl('http', s||hs, p||hp);
-  const httpsUrl=buildUrl('https',hs||s, hp||p);
-
-  const lines=[];
-  lines.push('# 写入 ~/.zshrc — 执行后每次开终端自动生效');
-  if(httpUrl)  lines.push(`export HTTP_PROXY=${httpUrl}`);
-  if(httpsUrl) lines.push(`export HTTPS_PROXY=${httpsUrl}`);
-  if(httpUrl||httpsUrl) lines.push(`export ALL_PROXY=${httpsUrl||httpUrl}`);
-  lines.push('export NO_PROXY=localhost,127.0.0.1');
-
-  currentCmd=lines.slice(1, lines.indexOf('')).join('\n');
-
-  const rendered=lines.map(l=>{
-    if(l.startsWith('#')) return `<span style="color:#484f58">${esc(l)}</span>`;
-    if(l.startsWith('export ')){
-      const eq=l.indexOf('=');
-      return `<span style="color:#79c0ff">export </span><span style="color:#c9d1d9">${esc(l.slice(7,eq))}</span><span style="color:#c9d1d9">=</span><span style="color:#a5d6ff">${esc(l.slice(eq+1))}</span>`;
+  setMcpStatus('busy', '连接中...');
+  try {
+    // 先测试连接
+    const headers = { 
+      'Content-Type': 'application/json', 
+      'AIKey': state.mcpKey 
+    };
+    
+    // 如果有 Cookie，添加到请求头
+    if (state.mcpCookie) {
+      headers['Cookie'] = state.mcpCookie;
     }
-    return esc(l);
-  }).join('\n');
+    
+    const testResponse = await fetch(state.mcpUrl, {
+      method: 'POST',
+      headers: headers,
+      credentials: 'include',
+      body: JSON.stringify({ 
+        jsonrpc: '2.0', 
+        id: Date.now(), 
+        method: 'tools/list', 
+        params: {} 
+      })
+    });
+    
+    if (!testResponse.ok) {
+      throw new Error(`HTTP ${testResponse.status}: ${testResponse.statusText}`);
+    }
+    
+    const data = await testResponse.json();
+    console.log('MCP Response:', data);
+    
+    if (data.error) {
+      throw new Error(data.error.message || 'MCP 返回错误');
+    }
+    
+    state.tools = data.result?.tools || [];
+    state.mcpOk = true;
+    setMcpStatus('ok', `已连接 · ${state.tools.length} 个工具`);
+    renderToolList();
+    addSysMsg(`✅ MCP 连接成功，加载了 **${state.tools.length}** 个工具。`);
+    
+    if (state.tools.length === 0) {
+      addSysMsg('⚠️ 警告：MCP 服务返回了 0 个工具，请检查服务端配置。');
+    }
+  } catch (err) {
+    state.mcpOk = false;
+    setMcpStatus('err', '连接失败');
+    addSysMsg(`❌ MCP 连接失败：${err.message}`);
+    console.error('MCP connection error:', err);
+  }
+}
 
-  document.getElementById('cmdPreview').innerHTML=rendered;
-  showStatus('directStatus','success','命令已生成，复制后粘贴到终端执行即可');
-});
+function setMcpStatus(type, text) {
+  const cls = type === 'ok' ? 'ok' : type === 'err' ? 'err' : 'busy';
+  document.getElementById('mcp-dot').className = `status-dot ${cls}`;
+  document.getElementById('mcp-label').textContent = text;
+}
 
-document.getElementById('copyCmdBtn').addEventListener('click',()=>{
-  if(!currentCmd){showToast('请先生成命令');return}
-  copyText(currentCmd);
-});
+function refreshSendBtn() {
+  const hasText = document.getElementById('user-input').value.trim().length > 0;
+  document.getElementById('send-btn').disabled = !(state.mcpOk && state.llmOk && hasText && !state.busy);
+}
+
+async function mcpCall(method, params = {}) {
+  const headers = { 
+    'Content-Type': 'application/json', 
+    'AIKey': state.mcpKey 
+  };
+  
+  if (state.mcpCookie) {
+    headers['Cookie'] = state.mcpCookie;
+  }
+  
+  const resp = await fetch(state.mcpUrl, {
+    method: 'POST',
+    headers: headers,
+    credentials: 'include',
+    body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params })
+  });
+  
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+  const data = await resp.json();
+  if (data.error) throw new Error(data.error.message || 'MCP 错误');
+  return data.result;
+}
+
+async function callLLM(messages) {
+  const actualModel = getActualModel();
+  
+  const requestBody = {
+    model: actualModel,
+    messages: messages,
+    tools: state.tools.map(t => ({
+      type: 'function',
+      function: {
+        name: t.name,
+        description: (t.description || '').replace(/\r?\n/g, ' ').slice(0, 300),
+        parameters: t.inputSchema || { type: 'object', properties: {}, required: [] }
+      }
+    })),
+    tool_choice: 'auto',
+    max_tokens: 4096,
+    temperature: 0.3
+  };
+  
+  console.log('LLM Request:', { url: state.llmUrl, model: actualModel, toolsCount: state.tools.length });
+  
+  const resp = await fetch(state.llmUrl, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json', 
+      'Authorization': `Bearer ${state.llmKey}`
+    },
+    body: JSON.stringify(requestBody)
+  });
+  
+  if (!resp.ok) {
+    const errText = await resp.text();
+    console.error('LLM API Error:', resp.status, errText);
+    throw new Error(`百炼 API HTTP ${resp.status}: ${errText.substring(0, 200)}`);
+  }
+  return resp.json();
+}
+
+async function agentLoop(userText, bubbleEl, bodyEl) {
+  const messages = [
+    { role: 'system', content: SYSTEM_PROMPT },
+    ...state.history,
+    { role: 'user', content: userText }
+  ];
+  let replyText = '';
+  let iter = 0;
+
+  while (iter++ < 8) {
+    setThinking(bubbleEl, replyText, '思考中...');
+    let resp;
+    try { 
+      resp = await callLLM(messages); 
+    } catch (err) { 
+      setFinal(bubbleEl, replyText + `\n\n**错误：** ${err.message}`); 
+      return;
+    }
+
+    const msg = resp.choices[0].message;
+    messages.push(msg);
+    if (msg.content) replyText = (replyText + msg.content).trim();
+
+    if (!msg.tool_calls?.length) {
+      setFinal(bubbleEl, replyText);
+      state.history.push({ role: 'user', content: userText });
+      state.history.push({ role: 'assistant', content: replyText });
+      if (state.history.length > 24) state.history = state.history.slice(-24);
+      return;
+    }
+
+    for (const tc of msg.tool_calls) {
+      const name = tc.function.name;
+      let args = {};
+      try { args = JSON.parse(tc.function.arguments || '{}'); } catch(e) {}
+
+      const cardEl = addToolCard(bodyEl, name, args, 'running');
+      setThinking(bubbleEl, replyText, `调用: ${name.split('__')[1] || name}`);
+
+      const t0 = Date.now();
+      let toolResult;
+      try {
+        toolResult = await mcpCall('tools/call', { name, arguments: args });
+        cardEl.className = 'tool-card ok';
+        addLogItem(name, Date.now() - t0, true);
+      } catch (err) {
+        toolResult = { error: err.message };
+        cardEl.className = 'tool-card err';
+        addLogItem(name, Date.now() - t0, false);
+      }
+      messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(toolResult) });
+    }
+  }
+  setFinal(bubbleEl, replyText + '\n\n*（已达最大工具调用轮次）*');
+}
+
+function setThinking(el, text, hint) {
+  el.innerHTML = (text ? md(text) + '<br>' : '') +
+    `<div class="thinking"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span>${hint}</span></div>`;
+  scrollBottom();
+}
+function setFinal(el, text) { el.innerHTML = md(text || '（无回复）'); scrollBottom(); }
+
+function addToolCard(bodyEl, name, args, status) {
+  const el = document.createElement('div');
+  el.className = `tool-card ${status}`;
+  const short = name.split('__')[1] || name;
+  const group = name.includes('__') ? name.split('__')[0] : '';
+  el.innerHTML = `<div class="tool-card-head"><span class="tool-tag">${short}</span><span class="tool-group-text">${group}</span></div>
+    <div class="tool-args">${JSON.stringify(args, null, 2).slice(0, 200)}</div>`;
+  bodyEl.appendChild(el);
+  scrollBottom();
+  return el;
+}
+
+function addLogItem(name, ms, ok) {
+  state.callCount++;
+  document.getElementById('call-count').textContent = state.callCount;
+  const log = document.getElementById('call-log');
+  const ph = log.querySelector('div[style]');
+  if (ph) ph.remove();
+  const el = document.createElement('div');
+  el.className = `log-item ${ok ? 'ok' : 'err'}`;
+  el.innerHTML = `<div class="fn">${(name.split('__')[1] || name).slice(0, 26)}</div><div class="meta">${ms}ms · ${ok ? '成功' : '失败'}</div>`;
+  log.insertBefore(el, log.firstChild);
+}
+
+function renderToolList() {
+  const container = document.getElementById('tool-list');
+  document.getElementById('tool-count').textContent = state.tools.length;
+  const groups = {};
+  state.tools.forEach(t => {
+    const g = t.name.includes('__') ? t.name.split('__')[0] : 'Other';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(t);
+  });
+  if (Object.keys(groups).length === 0) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:6px">暂无工具，请检查 MCP 连接</div>';
+    return;
+  }
+  container.innerHTML = Object.entries(groups).map(([g, ts]) =>
+    `<div class="tool-group-label">${g}</div>` +
+    ts.map(t => `<div class="tool-item" title="${esc((t.description||'').replace(/\r?\n/g,' '))}">
+      <div class="tool-item-name">${t.name.split('__')[1] || t.name}</div>
+      <div class="tool-item-desc">${(t.description||'').replace(/\r?\n/g,' ').slice(0,55)}</div>
+    </div>`).join('')
+  ).join('');
+}
+
+async function sendMessage() {
+  if (state.busy) return;
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+  state.busy = true;
+  input.value = ''; autoResize(input);
+  refreshSendBtn();
+  addUserMsg(text);
+  const { bubbleEl, bodyEl } = addAssistantMsg();
+  try { await agentLoop(text, bubbleEl, bodyEl); }
+  catch (err) { 
+    console.error('Agent loop error:', err);
+    setFinal(bubbleEl, `异常：${err.message}`); 
+  }
+  finally {
+    state.busy = false;
+    refreshSendBtn();
+    input.focus();
+  }
+}
+
+function sendQuick(text) { 
+  document.getElementById('user-input').value = text; 
+  sendMessage(); 
+}
+
+function handleKey(e) { 
+  if (e.key === 'Enter' && !e.shiftKey) { 
+    e.preventDefault(); 
+    sendMessage(); 
+  } 
+}
+
+function autoResize(el) { 
+  el.style.height = 'auto'; 
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px'; 
+}
+
+function addUserMsg(text) {
+  removeEmpty();
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  el.innerHTML = `<div class="msg-avatar">我</div><div class="msg-body"><div class="msg-bubble">${esc(text).replace(/\n/g,'<br>')}</div></div>`;
+  document.getElementById('messages').appendChild(el);
+  scrollBottom();
+}
+
+function addAssistantMsg() {
+  removeEmpty();
+  const el = document.createElement('div');
+  el.className = 'msg assistant';
+  el.innerHTML = `<div class="msg-avatar">AI</div><div class="msg-body"></div>`;
+  const bodyEl = el.querySelector('.msg-body');
+  const bubbleEl = document.createElement('div');
+  bubbleEl.className = 'msg-bubble';
+  bodyEl.appendChild(bubbleEl);
+  document.getElementById('messages').appendChild(el);
+  scrollBottom();
+  return { bubbleEl, bodyEl };
+}
+
+function addSysMsg(text) {
+  removeEmpty();
+  const el = document.createElement('div');
+  el.className = 'sys-msg';
+  el.innerHTML = md(text);
+  document.getElementById('messages').appendChild(el);
+  scrollBottom();
+}
+
+function removeEmpty() { 
+  const e = document.getElementById('empty-state'); 
+  if (e && e.parentNode) e.remove(); 
+}
+
+function scrollBottom() { 
+  const m = document.getElementById('messages'); 
+  setTimeout(() => m.scrollTop = m.scrollHeight, 30); 
+}
+
+function esc(s) { 
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); 
+}
+
+function md(text) {
+  let result = esc(text)
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/^#{1,3} (.+)$/gm,'<h3>$1</h3>');
+  
+  // 简单的列表处理
+  if (result.includes('<li>')) {
+    result = result.replace(/<li>([\s\S]*?)<\/li>/g, (match) => {
+      return `<li>${match.replace(/<\/?li>/g, '')}</li>`;
+    });
+  }
+  
+  result = result.replace(/\n\n+/g,'</p><p>');
+  result = result.replace(/\n/g,'<br>');
+  return result;
+}
+
+// 初始化
+document.getElementById('user-input').addEventListener('input', refreshSendBtn);
+openModal();
+
+// 添加 CORS 代理提示（如果需要）
+if (window.location.protocol === 'file:') {
+  addSysMsg('💡 提示：当前以文件协议打开，可能存在 CORS 限制。建议使用本地服务器运行（如 python -m http.server 8000）');
+}
 </script>
 </body>
 </html>
