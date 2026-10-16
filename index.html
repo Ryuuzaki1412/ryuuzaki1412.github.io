@@ -3,832 +3,1194 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ITSM AI 助手</title>
+<title>距骨骰 · Knucklebones</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23f2b179'/%3E%3Ccircle cx='28' cy='28' r='10' fill='%23fff'/%3E%3Ccircle cx='72' cy='50' r='10' fill='%23fff'/%3E%3Ccircle cx='28' cy='72' r='10' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="peerjs.min.js"></script>
+<script>
+if(typeof Peer==='undefined'){
+  document.write('<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"><\\/script>');
+}
+</script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #f5f5f4;
-    --surface: #ffffff;
-    --surface2: #f9f9f8;
-    --border: rgba(0,0,0,0.1);
-    --border2: rgba(0,0,0,0.2);
-    --text: #1a1a18;
-    --text2: #6b6b67;
-    --text3: #9b9b96;
-    --accent: #534AB7;
-    --accent-light: #EEEDFE;
-    --accent-text: #3C3489;
-    --success: #0F6E56;
-    --success-light: #E1F5EE;
-    --warning: #854F0B;
-    --warning-light: #FAEEDA;
-    --danger: #A32D2D;
-    --danger-light: #FCEBEB;
-    --radius: 10px;
-    --radius-sm: 6px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1a1a18; --surface: #242422; --surface2: #2c2c2a;
-      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
-      --text: #e8e8e2; --text2: #9b9b96; --text3: #6b6b67;
-      --accent: #7F77DD; --accent-light: #26215C; --accent-text: #AFA9EC;
-      --success: #5DCAA5; --success-light: #04342C;
-      --warning: #EF9F27; --warning-light: #412402;
-      --danger: #F09595; --danger-light: #501313;
-    }
-  }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg); color: var(--text);
-    height: 100vh; display: flex; flex-direction: column;
-    font-size: 14px; line-height: 1.6;
-  }
-  .header {
-    background: var(--surface); border-bottom: 0.5px solid var(--border);
-    padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-  }
-  .header-logo {
-    width: 32px; height: 32px; background: var(--accent); border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .header-logo svg { width: 18px; height: 18px; fill: white; }
-  .header-title { font-size: 15px; font-weight: 500; }
-  .header-sub { font-size: 12px; color: var(--text2); }
-  .header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
-  .status-group { display: flex; align-items: center; gap: 6px; }
-  .status-label { font-size: 12px; color: var(--text2); }
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; transition: background 0.3s; }
-  .status-dot.ok { background: var(--success); }
-  .status-dot.err { background: var(--danger); }
-  .status-dot.busy { background: var(--warning); animation: pulse 1s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .config-btn {
-    font-size: 12px; padding: 5px 12px; border-radius: var(--radius-sm);
-    border: 0.5px solid var(--border2); background: transparent;
-    color: var(--text2); cursor: pointer; transition: background 0.15s;
-  }
-  .config-btn:hover { background: var(--surface2); }
-  .main { flex: 1; display: flex; overflow: hidden; }
-  .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  .messages {
-    flex: 1; overflow-y: auto; padding: 20px;
-    display: flex; flex-direction: column; gap: 16px;
-  }
-  .empty-state {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 12px; color: var(--text3); text-align: center;
-  }
-  .empty-icon {
-    width: 52px; height: 52px; background: var(--accent-light);
-    border-radius: 14px; display: flex; align-items: center; justify-content: center;
-  }
-  .empty-icon svg { width: 26px; height: 26px; fill: var(--accent); }
-  .empty-state h2 { font-size: 16px; font-weight: 500; color: var(--text2); }
-  .empty-state p { font-size: 13px; max-width: 340px; line-height: 1.7; }
-  .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 4px; }
-  .quick-btn {
-    background: var(--surface); border: 0.5px solid var(--border2);
-    border-radius: 20px; padding: 6px 14px; font-size: 12px;
-    color: var(--text2); cursor: pointer; transition: border-color 0.15s, color 0.15s;
-  }
-  .quick-btn:hover { border-color: var(--accent); color: var(--accent-text); }
-  .msg { display: flex; gap: 10px; max-width: 100%; }
-  .msg.user { flex-direction: row-reverse; }
-  .msg-avatar {
-    width: 30px; height: 30px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 500; flex-shrink: 0; margin-top: 2px;
-  }
-  .msg.user .msg-avatar { background: var(--accent); color: white; }
-  .msg.assistant .msg-avatar { background: var(--accent-light); color: var(--accent-text); }
-  .msg-body { display: flex; flex-direction: column; gap: 6px; max-width: calc(100% - 44px); }
-  .msg.user .msg-body { align-items: flex-end; }
-  .msg-bubble {
-    padding: 10px 14px; border-radius: var(--radius);
-    font-size: 14px; line-height: 1.6; word-break: break-word;
-  }
-  .msg.user .msg-bubble { background: var(--accent); color: white; border-bottom-right-radius: 3px; }
-  .msg.assistant .msg-bubble {
-    background: var(--surface); border: 0.5px solid var(--border);
-    color: var(--text); border-bottom-left-radius: 3px;
-  }
-  .msg-bubble p { margin-bottom: 8px; }
-  .msg-bubble p:last-child { margin-bottom: 0; }
-  .msg-bubble ul, .msg-bubble ol { padding-left: 18px; margin: 6px 0; }
-  .msg-bubble li { margin-bottom: 3px; }
-  .msg-bubble code {
-    background: rgba(0,0,0,0.07); border-radius: 3px;
-    padding: 1px 5px; font-family: monospace; font-size: 12px;
-  }
-  .msg.user .msg-bubble code { background: rgba(255,255,255,0.2); }
-  .msg-bubble h3 { font-size: 14px; font-weight: 500; margin: 8px 0 4px; }
-  .tool-card {
-    background: var(--surface2); border: 0.5px solid var(--border);
-    border-left: 2px solid var(--accent); border-radius: var(--radius-sm);
-    padding: 8px 12px; font-size: 12px;
-  }
-  .tool-card.ok { border-left-color: var(--success); }
-  .tool-card.err { border-left-color: var(--danger); }
-  .tool-card.running { border-left-color: var(--warning); }
-  .tool-card-head { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-  .tool-tag {
-    font-family: monospace; font-size: 11px; font-weight: 500;
-    background: var(--accent-light); color: var(--accent-text);
-    border-radius: 3px; padding: 1px 6px;
-  }
-  .tool-card.ok .tool-tag { background: var(--success-light); color: var(--success); }
-  .tool-card.err .tool-tag { background: var(--danger-light); color: var(--danger); }
-  .tool-card.running .tool-tag { background: var(--warning-light); color: var(--warning); }
-  .tool-group-text { font-size: 11px; color: var(--text3); }
-  .tool-args {
-    font-family: monospace; font-size: 11px; color: var(--text3);
-    white-space: pre-wrap; word-break: break-all; max-height: 60px; overflow-y: auto;
-  }
-  .thinking {
-    display: inline-flex; align-items: center; gap: 8px;
-    color: var(--text2); font-size: 13px;
-  }
-  .dots { display: flex; gap: 4px; }
-  .dot {
-    width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
-    animation: bounce 1.2s ease-in-out infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
-  .input-area {
-    padding: 14px 20px; background: var(--surface);
-    border-top: 0.5px solid var(--border); flex-shrink: 0;
-  }
-  .input-row { display: flex; gap: 8px; align-items: flex-end; }
-  .input-wrap {
-    flex: 1; background: var(--surface2); border: 0.5px solid var(--border2);
-    border-radius: var(--radius); transition: border-color 0.15s;
-  }
-  .input-wrap:focus-within { border-color: var(--accent); }
-  #user-input {
-    width: 100%; background: transparent; border: none; outline: none;
-    color: var(--text); font-size: 14px; padding: 10px 14px;
-    resize: none; font-family: inherit; line-height: 1.5;
-    max-height: 120px; min-height: 42px;
-  }
-  .send-btn {
-    width: 40px; height: 40px; background: var(--accent); border: none;
-    border-radius: var(--radius-sm); cursor: pointer;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    transition: opacity 0.15s;
-  }
-  .send-btn:hover { opacity: 0.85; }
-  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .send-btn svg { width: 18px; height: 18px; fill: white; }
-  .input-hint { font-size: 11px; color: var(--text3); margin-top: 5px; text-align: right; }
-  .side-panel {
-    width: 270px; background: var(--surface); border-left: 0.5px solid var(--border);
-    display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0;
-  }
-  .panel-section { display: flex; flex-direction: column; overflow: hidden; }
-  .panel-section.grow { flex: 1; min-height: 0; }
-  .panel-head {
-    padding: 10px 14px; border-bottom: 0.5px solid var(--border);
-    font-size: 11px; font-weight: 500; color: var(--text2);
-    text-transform: uppercase; letter-spacing: 0.05em;
-    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
-  }
-  .panel-body { overflow-y: auto; padding: 10px; }
-  .badge {
-    display: inline-block; font-size: 10px; padding: 1px 7px;
-    border-radius: 10px; font-weight: 500; text-transform: none; letter-spacing: 0;
-  }
-  .badge-purple { background: var(--accent-light); color: var(--accent-text); }
-  .badge-gray { background: var(--surface2); color: var(--text2); border: 0.5px solid var(--border); }
-  .tool-list { display: flex; flex-direction: column; gap: 2px; }
-  .tool-group-label {
-    font-size: 10px; font-weight: 500; color: var(--text3);
-    text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 6px 3px;
-  }
-  .tool-item { padding: 5px 8px; border-radius: var(--radius-sm); cursor: default; }
-  .tool-item:hover { background: var(--surface2); }
-  .tool-item-name { font-family: monospace; font-size: 11px; color: var(--accent-text); font-weight: 500; }
-  .tool-item-desc { font-size: 11px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .call-log { display: flex; flex-direction: column; gap: 5px; }
-  .log-item {
-    padding: 5px 8px; border-radius: var(--radius-sm);
-    border: 0.5px solid var(--border); font-size: 11px;
-  }
-  .log-item.ok { border-left: 2px solid var(--success); }
-  .log-item.err { border-left: 2px solid var(--danger); }
-  .log-item .fn { font-family: monospace; color: var(--accent-text); font-weight: 500; }
-  .log-item .meta { color: var(--text3); font-size: 10px; margin-top: 1px; }
-  .sys-msg { text-align: center; font-size: 12px; color: var(--text3); padding: 2px 0; }
-  .overlay {
-    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-    align-items: center; justify-content: center; z-index: 50;
-  }
-  .overlay.open { display: flex; }
-  .modal {
-    background: var(--surface); border: 0.5px solid var(--border2);
-    border-radius: var(--radius); padding: 24px;
-    width: 520px; max-width: 95vw; max-height: 90vh; overflow-y: auto;
-  }
-  .modal-title { font-size: 16px; font-weight: 500; margin-bottom: 20px; }
-  .section-label {
-    font-size: 11px; font-weight: 500; color: var(--text2);
-    text-transform: uppercase; letter-spacing: 0.06em;
-    margin-bottom: 12px; padding-bottom: 6px; border-bottom: 0.5px solid var(--border);
-  }
-  .form-row { margin-bottom: 14px; }
-  .form-row label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 5px; }
-  .form-row input, .form-row select {
-    width: 100%; background: var(--surface2); border: 0.5px solid var(--border2);
-    border-radius: var(--radius-sm); color: var(--text); font-size: 13px;
-    padding: 8px 10px; outline: none;
-  }
-  .form-row input { font-family: monospace; }
-  .form-row input:focus, .form-row select:focus { border-color: var(--accent); }
-  .form-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
-  .divider { height: 0.5px; background: var(--border); margin: 20px 0; }
-  .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
-  .btn-primary {
-    background: var(--accent); color: white; border: none;
-    border-radius: var(--radius-sm); padding: 8px 18px; font-size: 13px; cursor: pointer;
-  }
-  .btn-primary:hover { opacity: 0.88; }
-  .btn-cancel {
-    background: transparent; color: var(--text2); border: 0.5px solid var(--border2);
-    border-radius: var(--radius-sm); padding: 8px 18px; font-size: 13px; cursor: pointer;
-  }
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-  @media (max-width: 680px) { .side-panel { display: none; } }
-  .error-details {
-    background: var(--danger-light);
-    border: 1px solid var(--danger);
-    border-radius: var(--radius-sm);
-    padding: 8px;
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--danger);
-  }
+:root{
+  --bg:#faf8ef; --text:#776e65; --text-l:#a89c90;
+  --grid:#bbada0; --cell:#cdc1b4;
+  --t1:#eee4da; --t2:#ede0c8; --t3:#f2b179; --t4:#f59563; --t5:#f67c5f; --t6:#f65e3b;
+  --btn:#8f7a66; --btn-h:#9f8b77;
+  --dieS:60px; --colw:calc(var(--dieS) + 12px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:'Nunito','Clear Sans','PingFang SC','Hiragino Sans GB','Microsoft YaHei',Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--text); user-select:none;
+}
+#stage{width:480px;margin:12px auto;display:flex;flex-direction:column;transform-origin:top center}
+
+/* ---------- 头部 ---------- */
+header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing:2px}
+.subtitle{font-size:13px;font-weight:700;color:var(--text-l);margin-top:4px;letter-spacing:1px}
+.scores{display:flex;gap:8px}
+.scorebox{background:var(--grid);border-radius:5px;padding:6px 18px 8px;text-align:center;min-width:86px}
+.scorebox label{display:block;font-size:12px;font-weight:800;color:#eee4da;letter-spacing:1px}
+.scorebox b{display:inline-block;font-size:26px;font-weight:800;color:#fff;line-height:1.15;min-width:44px}
+.scorebox b.bump{animation:bump .4s}
+@keyframes bump{40%{transform:scale(1.35);color:var(--t3)}}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.coins{font-size:15px;font-weight:800;color:var(--text)}
+.coins b{font-size:18px}
+.iconbtn{width:34px;height:34px;border:none;border-radius:5px;cursor:pointer;margin-left:8px;
+  background:var(--btn);color:#fff;font-size:16px;font-weight:800;font-family:inherit;transition:background .12s}
+.iconbtn:hover{background:var(--btn-h)}
+
+/* ---------- 对手行 ---------- */
+.nameplate{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:5px;margin-bottom:8px;
+  font-size:17px;font-weight:800;transition:background .25s}
+.nameplate.active{background:var(--t1)}
+.nameplate .quip{position:relative;background:var(--t1);color:var(--text);font-size:13px;font-weight:700;
+  padding:3px 10px;border-radius:10px;opacity:0;transform:translateY(4px);transition:.2s;pointer-events:none}
+.nameplate .quip.show{opacity:1;transform:none}
+.nameplate .bigholder{margin-left:auto}
+.avatar{width:26px;height:26px;flex:none}
+
+/* ---------- 棋盘 ---------- */
+.board{display:grid;grid-template-columns:repeat(3,var(--colw));gap:10px;justify-content:center;
+  background:var(--grid);border-radius:8px;padding:10px;transition:box-shadow .25s}
+.board.active{box-shadow:0 0 0 3px var(--btn)}
+.col{display:flex;flex-direction:column;gap:10px;position:relative;padding:4px;border-radius:6px;transition:background .12s}
+.slot{width:var(--dieS);height:var(--dieS);border-radius:5px;background:var(--cell);position:relative}
+.col.pickable{cursor:pointer}
+.col.pickable:hover{background:rgba(250,248,239,.35)}
+.col.full{opacity:.5}
+
+/* ---------- 骰子（扁平色阶，同 2048 瓦片） ---------- */
+.die{position:absolute;inset:4px;border-radius:5px;transform:rotate(var(--tilt,0deg));
+  transition:none}
+.die[data-v="1"]{background:var(--t1)}
+.die[data-v="2"]{background:var(--t2)}
+.die[data-v="3"]{background:var(--t3)}
+.die[data-v="4"]{background:var(--t4)}
+.die[data-v="5"]{background:var(--t5)}
+.die[data-v="6"]{background:var(--t6)}
+.die i{position:absolute;width:23%;height:23%;border-radius:50%;transform:translate(-50%,-50%);background:var(--text)}
+.die[data-v="3"] i,.die[data-v="4"] i,.die[data-v="5"] i,.die[data-v="6"] i{background:#f9f6f2}
+.die.pop{animation:pop .3s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{0%{transform:translateY(-18px) scale(.5);opacity:0}
+  70%{transform:scale(1.08)}100%{transform:rotate(var(--tilt,0deg))}}
+.die.fly{animation:fly .5s ease-in forwards}
+@keyframes fly{to{transform:translate(var(--fx,60px),-90px) rotate(150deg) scale(.4);opacity:0}}
+.die.ghost{opacity:.35}
+.die.ghost::after{content:'';position:absolute;inset:0;border-radius:5px;border:2px dashed rgba(119,110,101,.5)}
+.die.doomed{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--t6);animation:doom .5s ease-in-out infinite alternate}
+@keyframes doom{to{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--t4)}}
+
+/* 中央掷骰区 */
+.controls{display:flex;align-items:center;justify-content:center;gap:16px;height:76px;margin:2px 0}
+.bigholder{width:56px;height:56px;position:relative}
+.bigholder .die{inset:0;width:100%;height:100%;position:absolute;border-radius:5px}
+.die.tumbling{animation:tumble .75s ease-in-out}
+@keyframes tumble{
+  0%{transform:rotate(0)}25%{transform:rotate(-90deg) scale(.9)}
+  50%{transform:rotate(-180deg)}75%{transform:rotate(-280deg) scale(.94)}
+  100%{transform:rotate(-360deg)}}
+
+/* ---------- 猜拳 ---------- */
+.rpsHands{display:flex;align-items:center;justify-content:center;gap:26px;margin:10px 0 18px}
+.rpsSide label{display:block;font-size:14px;font-weight:800;color:var(--text-l);margin-top:6px}
+.rpsHand{font-size:54px;line-height:1;display:inline-block;transform:rotate(0)}
+.rpsHand.shake{animation:rpsShake .45s ease-in-out infinite}
+@keyframes rpsShake{0%,100%{transform:rotate(-18deg) translateY(0)}50%{transform:rotate(14deg) translateY(-8px)}}
+.rpsHand.reveal{animation:rpsReveal .3s cubic-bezier(.2,1.6,.4,1)}
+
+/* 中央掷骰区 */
+.controls{display:flex;align-items:center;justify-content:center;gap:16px;height:62px;margin:2px 0}
+.bigholder{width:56px;height:56px;position:relative}
+.bigholder .die{inset:0;width:100%;height:100%;position:absolute;border-radius:5px}
+.die.tumbling{animation:tumble .75s ease-in-out}
+@keyframes tumble{
+  0%{transform:rotate(0)}25%{transform:rotate(-90deg) scale(.9)}
+  50%{transform:rotate(-180deg)}75%{transform:rotate(-280deg) scale(.94)}
+  100%{transform:rotate(-360deg)}}
+
+/* ---------- 猜拳 ---------- */
+.rpsHands{display:flex;align-items:center;justify-content:center;gap:26px;margin:10px 0 18px}
+.rpsSide label{display:block;font-size:14px;font-weight:800;color:var(--text-l);margin-top:6px}
+.rpsHand{font-size:54px;line-height:1;display:inline-block;transform:rotate(0)}
+.rpsHand.shake{animation:rpsShake .45s ease-in-out infinite}
+@keyframes rpsShake{0%,100%{transform:rotate(-18deg) translateY(0)}50%{transform:rotate(14deg) translateY(-8px)}}
+.rpsHand.reveal{animation:rpsReveal .3s cubic-bezier(.2,1.6,.4,1)}
+@keyframes rpsReveal{0%{transform:scale(.5)}100%{transform:scale(1)}}
+.rpsVS{font-size:20px;font-weight:800;color:var(--text-l)}
+.rpsBtns{display:flex;justify-content:center;gap:10px}
+.rpsbtn{font-size:17px !important;padding:11px 20px !important;margin:0 !important}
+
+/* ---------- 中间计分层 ---------- */
+.divider{display:grid;grid-template-columns:repeat(3,var(--colw));gap:10px;justify-content:center;
+  padding:4px 14px}
+.cscore{display:flex;flex-direction:column;align-items:center;gap:0;border-radius:5px;overflow:hidden}
+.cscore .rt,.cscore .yn{font-size:15px;font-weight:800;line-height:1.3;display:inline-block;min-width:34px;text-align:center;padding:0 6px}
+.cscore .rt{color:#fff;background:var(--t5)}
+.cscore .yn{color:#fff;background:var(--btn)}
+.cscore .rt.bump,.cscore .yn.bump{animation:bump .4s}
+
+/* 悬停预览标签 */
+.tag{position:absolute;top:-44px;left:50%;transform:translateX(-50%);z-index:20;white-space:nowrap;
+  background:var(--btn);color:#fff;border-radius:5px;padding:4px 11px;font-size:13px;font-weight:800;pointer-events:none}
+.tag b{font-weight:800}
+.tag.knock{background:var(--t6);top:-78px}
+
+/* ---------- 提示行 ---------- */
+#hintbar{min-height:24px;text-align:center;font-size:15px;font-weight:700;color:var(--text);margin-top:12px;line-height:1.5}
+#hintbar b{color:#e85c41}
+
+/* ---------- 覆盖层（2048 风半透明米色） ---------- */
+.overlay{position:fixed;inset:0;background:rgba(250,248,239,.86);display:none;
+  align-items:center;justify-content:center;z-index:100}
+.overlay.show{display:flex}
+.card{width:min(460px,92vw);max-height:90vh;overflow:auto;text-align:center;animation:cardIn .25s ease-out}
+@keyframes cardIn{from{transform:translateY(14px);opacity:0}}
+.card h2{font-size:44px;font-weight:800;color:var(--text);letter-spacing:4px;margin-bottom:8px}
+.card .sub{font-size:16px;font-weight:700;color:var(--text-l);margin-bottom:18px;line-height:1.6}
+.bigbtn{font-family:inherit;font-size:18px;font-weight:800;letter-spacing:2px;color:#fff;cursor:pointer;margin:8px 6px 0;
+  background:var(--btn);border:none;border-radius:5px;padding:12px 34px;transition:background .12s,transform .06s}
+.bigbtn:hover{background:var(--btn-h)}
+.bigbtn:active{transform:translateY(2px)}
+.bigbtn:disabled{opacity:.4;cursor:not-allowed}
+.bigbtn.ghostbtn{background:var(--grid)}
+.bigbtn.ghostbtn:hover{background:var(--btn)}
+.betchips{display:flex;justify-content:center;gap:10px;margin:6px 0 8px}
+.chip{font-family:inherit;font-size:18px;font-weight:800;padding:8px 20px;border:none;border-radius:5px;cursor:pointer;
+  color:#fff;background:var(--grid);transition:background .12s,transform .1s}
+.chip:hover{background:var(--btn)}
+.chip.sel{background:var(--t5);transform:scale(1.06)}
+.chip:disabled{opacity:.35;cursor:not-allowed}
+
+/* 教程 */
+.steps{text-align:left;margin:4px 0 8px;display:flex;flex-direction:column;gap:10px}
+.step{display:flex;gap:14px;align-items:center;background:var(--t1);border-radius:6px;padding:12px 14px}
+.step .num{flex:none;width:30px;height:30px;border-radius:50%;background:var(--btn);color:#fff;font-size:15px;
+  font-weight:800;display:flex;align-items:center;justify-content:center}
+.step p{font-size:14.5px;font-weight:700;line-height:1.55;color:var(--text)}
+.step b{color:#e85c41}
+.demo{flex:none;display:flex;align-items:center;gap:5px}
+.mdie{width:26px;height:26px;position:relative;flex:none;border-radius:4px}
+.mdie[data-v="1"]{background:var(--t1);outline:2px solid var(--cell)}
+.mdie[data-v="2"]{background:var(--t2);outline:2px solid var(--cell)}
+.mdie[data-v="3"]{background:var(--t3)}
+.mdie[data-v="4"]{background:var(--t4)}
+.mdie[data-v="5"]{background:var(--t5)}
+.mdie[data-v="6"]{background:var(--t6)}
+.mdie i{position:absolute;width:23%;height:23%;border-radius:50%;transform:translate(-50%,-50%);background:var(--text)}
+.mdie[data-v="3"] i,.mdie[data-v="4"] i,.mdie[data-v="5"] i,.mdie[data-v="6"] i{background:#f9f6f2}
+.mdie.red{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--t6)}
+.demo .op{font-weight:800;color:var(--text);font-size:15px;margin:0 3px}
+.demo .arr{font-size:18px}
+
+/* 结算 */
+#endTitle{font-size:56px}
+#endSub{font-size:18px;font-weight:700;color:var(--text);margin-top:2px;line-height:1.7}
+#endSub b{font-size:24px;color:#e85c41}
+.alms{margin-top:14px;font-size:14px;font-weight:700;color:var(--text-l)}
+.ic{width:1.15em;height:1.15em;vertical-align:-.18em;display:inline-block}
 </style>
 </head>
 <body>
+<div id="stage">
+  <header>
+    <div class="titles">
+      <h1>距骨骰</h1>
+      <div class="subtitle">KNUCKLEBONES · 同列相乘 · 对位互顶</div>
+    </div>
+    <div class="scores">
+      <div class="scorebox"><label id="ratLabel">拉陶</label><b id="ratTotal">0</b></div>
+      <div class="scorebox"><label>你</label><b id="youTotal">0</b></div>
+    </div>
+  </header>
 
-<div class="header">
-  <div class="header-logo">
-    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+  <div class="toolbar">
+    <span class="coins"><span class="ici" data-ic="coins"></span><b id="coinNum">30</b></span>
+    <span>
+      <button class="iconbtn" id="btnTut" title="玩法说明">?</button>
+      <button class="iconbtn" id="btnMute" title="音效开关"><span class="ici" id="muteIc"></span></button>
+    </span>
   </div>
-  <div>
-    <div class="header-title">ITSM AI 助手</div>
-    <div class="header-sub">MCP + 阿里云百炼</div>
+
+  <!-- 对手（拉陶/在线玩家） -->
+  <div class="nameplate" id="plateRat">
+    <span class="avatar" id="avatarRat">
+      <svg viewBox="0 0 100 100"><circle cx="24" cy="30" r="14" fill="#a58a70"/><circle cx="76" cy="30" r="14" fill="#a58a70"/>
+      <circle cx="24" cy="30" r="7" fill="#e8b8b2"/><circle cx="76" cy="30" r="7" fill="#e8b8b2"/>
+      <ellipse cx="50" cy="58" rx="33" ry="30" fill="#b99a7d"/><ellipse cx="50" cy="73" rx="16" ry="11" fill="#d9c3a6"/>
+      <ellipse cx="50" cy="74" rx="6" ry="4.5" fill="#e37b7b"/>
+      <circle cx="37" cy="53" r="4.5" fill="#3a2c20"/><circle cx="63" cy="53" r="4.5" fill="#3a2c20"/></svg>
+    </span>
+    <span id="nameRat">拉陶</span>
+    <span class="quip" id="quip"></span>
+    <div class="bigholder" id="ratDie"></div>
   </div>
-  <div class="header-right">
-    <div class="status-group">
-      <div class="status-dot" id="mcp-dot"></div>
-      <span class="status-label" id="mcp-label">MCP 未连接</span>
+  <div class="board" id="boardRat"></div>
+
+  <div class="divider">
+    <div class="cscore"><span class="rt" id="csR0">0</span><span class="yn" id="csY0">0</span></div>
+    <div class="cscore"><span class="rt" id="csR1">0</span><span class="yn" id="csY1">0</span></div>
+    <div class="cscore"><span class="rt" id="csR2">0</span><span class="yn" id="csY2">0</span></div>
+  </div>
+
+  <!-- 玩家 -->
+  <div class="board" id="boardYou"></div>
+  <div class="controls">
+    <div class="bigholder" id="youDie"></div>
+  </div>
+
+  <div class="nameplate" id="plateYou" style="justify-content:flex-start">
+    <span class="avatar">
+      <svg viewBox="0 0 100 100">
+      <path d="M34 22 L38 8 L46 18 L50 6 L54 18 L62 8 L66 22 Q73 27 71 36 Q69 45 50 47 Q31 45 29 36 Q27 27 34 22 Z" fill="#e05252"/>
+      <circle cx="29" cy="39" r="12" fill="#f6f1e6"/><circle cx="50" cy="35" r="13" fill="#f6f1e6"/>
+      <circle cx="71" cy="39" r="12" fill="#f6f1e6"/><circle cx="37" cy="29" r="11" fill="#f6f1e6"/><circle cx="63" cy="29" r="11" fill="#f6f1e6"/>
+      <ellipse cx="50" cy="53" rx="18" ry="15" fill="#4a4a52"/>
+      <ellipse cx="42.5" cy="50" rx="5" ry="6.5" fill="#fff"/><ellipse cx="57.5" cy="50" rx="5" ry="6.5" fill="#fff"/>
+      <circle cx="44" cy="51" r="2.6" fill="#16161c"/><circle cx="56" cy="51" r="2.6" fill="#16161c"/></svg>
+    </span>
+    你
+  </div>
+
+  <footer id="hintbar"><span class="ici" data-ic="lightbulb"></span>先看看玩法吧</footer>
+</div>
+
+<!-- 猜拳定先手 -->
+<div class="overlay" id="rpsOv">
+  <div class="card">
+    <h2 style="font-size:38px">猜拳定先手</h2>
+    <div class="sub" id="rpsMsg">赢的先掷——出招吧！</div>
+    <div class="rpsHands">
+      <div class="rpsSide"><div class="rpsHand shake" id="rpsYou"><span class="ici" data-ic="circle-help"></span></div><label>你</label></div>
+      <div class="rpsVS">VS</div>
+      <div class="rpsSide"><div class="rpsHand shake" id="rpsRat"><span class="ici" data-ic="circle-help"></span></div><label id="rpsRatLabel">拉陶</label></div>
     </div>
-    <div class="status-group">
-      <div class="status-dot" id="llm-dot"></div>
-      <span class="status-label" id="llm-label">LLM 未配置</span>
+    <div class="rpsBtns">
+      <button class="bigbtn rpsbtn" data-c="rock"><span class="ici" data-ic="hand-fist"></span>石头</button>
+      <button class="bigbtn rpsbtn" data-c="scissors"><span class="ici" data-ic="scissors"></span>剪刀</button>
+      <button class="bigbtn rpsbtn" data-c="paper"><span class="ici" data-ic="hand"></span>布</button>
     </div>
-    <button class="config-btn" onclick="openModal()">配置</button>
   </div>
 </div>
 
-<div class="main">
-  <div class="chat-area">
-    <div class="messages" id="messages">
-      <div class="empty-state" id="empty-state">
-        <div class="empty-icon">
-          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/></svg>
-        </div>
-        <h2>ITSM AI 智能助手</h2>
-        <p>点击右上角「配置」，分别填写 MCP 服务信息和百炼 API Key，连接后即可用自然语言查询 ITSM 平台。</p>
-        <div class="quick-actions">
-          <button class="quick-btn" onclick="sendQuick('查询最近即将违反SLA的事件工单')">SLA 告警工单</button>
-          <button class="quick-btn" onclick="sendQuick('帮我ping一下设备ID为1的设备，看看是否在线')">ping 设备</button>
-          <button class="quick-btn" onclick="sendQuick('搜索关于网络故障排查的知识库文章')">搜索知识库</button>
-          <button class="quick-btn" onclick="sendQuick('获取工单的可查询字段列表')">工单字段列表</button>
-        </div>
-      </div>
+<!-- 开始 -->
+<div class="overlay" id="startOv">
+  <div class="card">
+    <h2>距骨骰</h2>
+    <div class="sub" id="startSub">拉陶眯起眼睛：「想赌一把吗，小羊？」</div>
+    <div class="startline" style="font-size:15px;font-weight:700;color:var(--text-l)">选择下注筹码（你有 <b id="stCoins" style="color:var(--text)">30</b> <span class="ici" data-ic="coins"></span>）</div>
+    <div class="betchips" id="chips"></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button class="bigbtn" id="btnStart"><span class="ici" data-ic="swords"></span>与拉陶对局</button>
+      <button class="bigbtn ghostbtn" id="btnOnlineOpen" style="background:var(--t5);color:#fff"><span class="ici" data-ic="swords"></span>双人在线对战</button>
     </div>
-    <div class="input-area">
-      <div class="input-row">
-        <div class="input-wrap">
-          <textarea id="user-input"
-            placeholder="输入问题，例如：帮我查询设备1的最新告警信息..."
-            rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-        </div>
-        <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
-          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </div>
-      <div class="input-hint">Enter 发送 · Shift+Enter 换行</div>
+    <div class="alms" id="almsBox" style="display:none">
+      钱袋空空如也……<br>
+      <button class="bigbtn ghostbtn" id="btnAlms">接受拉陶的施舍（+10 <span class="ici" data-ic="coins"></span>）</button>
     </div>
-  </div>
-
-  <div class="side-panel">
-    <div class="panel-section grow">
-      <div class="panel-head">
-        <span>MCP 工具</span>
-        <span class="badge badge-purple" id="tool-count">0</span>
-      </div>
-      <div class="panel-body">
-        <div class="tool-list" id="tool-list">
-          <div style="font-size:12px;color:var(--text3);padding:6px">连接 MCP 后显示</div>
-        </div>
-      </div>
-    </div>
-    <div class="panel-section" style="border-top:0.5px solid var(--border)">
-      <div class="panel-head">
-        <span>工具调用记录</span>
-        <span class="badge badge-gray" id="call-count">0</span>
-      </div>
-      <div class="panel-body" style="max-height:200px">
-        <div class="call-log" id="call-log">
-          <div style="font-size:12px;color:var(--text3)">暂无记录</div>
-        </div>
-      </div>
+    <div style="margin-top:14px">
+      <button class="bigbtn ghostbtn" id="btnTut2" style="font-size:15px;padding:9px 24px"><span class="ici" data-ic="book-open"></span>玩法说明</button>
     </div>
   </div>
 </div>
 
-<!-- Config Modal -->
-<div class="overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
-  <div class="modal">
-    <div class="modal-title">连接配置</div>
+<!-- 双人在线对战弹窗 -->
+<div class="overlay" id="onlineOv">
+  <div class="card" style="max-width:440px">
+    <h2 style="font-size:34px">双人在线联机</h2>
+    <div class="sub" style="margin-bottom:14px">WebRTC 极速直连 · 生成链接发给好友秒开</div>
 
-    <div class="section-label">MCP 服务（你的 ITSM 平台）</div>
-    <div class="form-row">
-      <label>MCP 服务地址</label>
-      <input type="text" id="cfg-mcp-url" placeholder="https://demo.logicalisservice.com/api/ai/mcp" />
-      <div class="form-hint">ITSM 平台暴露的 MCP JSON-RPC 接口地址</div>
-    </div>
-    <div class="form-row">
-      <label>AIKey</label>
-      <input type="password" id="cfg-mcp-key" placeholder="" />
-      <div class="form-hint">ITSM 平台颁发的鉴权 Key，通过请求头 AIKey 传递</div>
-    </div>
-    <div class="form-row">
-      <label>Cookie (可选)</label>
-      <input type="text" id="cfg-mcp-cookie" placeholder="ARRAffinity_demo=xxx; ARRAffinity_demo=xxx" />
-      <div class="form-hint">如果需要 Cookie 认证，在此填写</div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="section-label">阿里云百炼 LLM（独立配置）</div>
-    <div class="form-row">
-      <label>百炼 API Key</label>
-      <input type="password" id="cfg-llm-key" placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx" />
-      <div class="form-hint">
-        在 <a href="https://dashscope.console.aliyun.com/apiKey" target="_blank" style="color:var(--accent)">百炼控制台</a> 获取
+    <div id="netStatus" style="display:none;background:var(--t1);padding:14px;border-radius:6px;margin-bottom:14px">
+      <div id="netStatusText" style="font-weight:700;font-size:15px;color:var(--text)">连接中...</div>
+      <div id="roomCodeBox" style="display:none;margin-top:10px">
+        <div style="font-size:13px;color:var(--text-l);font-weight:700">房间专属代码</div>
+        <div id="roomCodeDisplay" style="font-size:28px;font-weight:800;letter-spacing:4px;color:var(--t6);margin:4px 0">------</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+          <button class="bigbtn" id="btnCopyLink" style="font-size:14px;padding:8px 16px;margin:0">复制邀请链接</button>
+        </div>
       </div>
     </div>
-    <div class="form-row">
-      <label>模型 ID</label>
-      <select id="cfg-llm-model">
-        <option value="qwen-max">qwen-max（推荐，工具调用最强）</option>
-        <option value="qwen-plus">qwen-plus（均衡）</option>
-        <option value="qwen-turbo">qwen-turbo（快速）</option>
-        <option value="qwen-long">qwen-long（超长上下文）</option>
-        <option value="qwen-max-latest">qwen-max-latest（最新版）</option>
-        <option value="qwen-plus-latest">qwen-plus-latest（最新均衡版）</option>
-      </select>
-      <div class="form-hint">支持输入自定义模型 ID，如 qwen-max-2025-04-01</div>
-    </div>
-    <div class="form-row">
-      <label>自定义模型 ID（可选）</label>
-      <input type="text" id="cfg-llm-model-custom" placeholder="例如: qwen-max-2025-04-01" />
-      <div class="form-hint">如果选择自定义，将优先使用此 ID</div>
-    </div>
-    <div class="form-row">
-      <label>百炼 API 地址</label>
-      <input type="text" id="cfg-llm-url" value="https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions" />
-      <div class="form-hint">使用 OpenAI 兼容模式，通常无需修改</div>
+
+    <div id="netActions" style="display:flex;flex-direction:column;gap:12px">
+      <button class="bigbtn" id="btnCreateRoom" style="background:var(--t5);margin:0">创建房间 (我是房主)</button>
+      <div style="display:flex;align-items:center;gap:10px;justify-content:center;margin-top:2px">
+        <input type="text" id="inputRoomId" placeholder="输入 4 位房间号" maxlength="8"
+          style="font-family:inherit;font-size:16px;font-weight:800;padding:10px 14px;border-radius:5px;border:2px solid var(--grid);outline:none;width:160px;text-align:center;text-transform:uppercase">
+        <button class="bigbtn" id="btnJoinRoom" style="margin:0;padding:10px 22px;font-size:16px">加入房间</button>
+      </div>
     </div>
 
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">取消</button>
-      <button class="btn-primary" onclick="saveAndConnect()">保存并连接 MCP</button>
+    <div style="margin-top:16px">
+      <button class="bigbtn ghostbtn" id="btnOnlineCancel" style="font-size:14px;padding:8px 22px">返回单机</button>
+    </div>
+  </div>
+</div>
+
+<!-- 教程 -->
+<div class="overlay" id="tutOv">
+  <div class="card">
+    <h2 style="font-size:36px">玩法说明</h2>
+    <div class="steps">
+      <div class="step"><div class="num">1</div>
+        <div class="demo" id="demo1"></div>
+        <p>你和对手<b>轮流掷一颗骰子</b>，放进<b>自己棋盘</b>的任意一列（每列最多 3 颗）。</p>
+      </div>
+      <div class="step"><div class="num">2</div>
+        <div class="demo" id="demo2"></div>
+        <p><b>同列同点数相乘</b>，不同点数相加。<br>示例：5×5 + 2 = <b>27</b> 分；堆出三个 6 就是 216 分！</p>
+      </div>
+      <div class="step"><div class="num">3</div>
+        <div class="demo" id="demo3"></div>
+        <p>往一列放骰子时，会<b>顶掉对方对面同列相同点数</b>的骰子——互相拆台！</p>
+      </div>
+      <div class="step"><div class="num">4</div>
+        <div class="demo"><span class="ici" data-ic="flag"></span></div>
+        <p>任意一方<b>九宫格填满</b>时对局结束，<b>总分高者获胜</b>！</p>
+      </div>
+    </div>
+    <button class="bigbtn" id="btnTutOk">明白啦！</button>
+  </div>
+</div>
+
+<!-- 结算 -->
+<div class="overlay" id="endOv">
+  <div class="card">
+    <h2 id="endTitle">你赢了！</h2>
+    <div id="endSub"></div>
+    <div>
+      <button class="bigbtn" id="btnAgain">再来一局</button>
+      <button class="bigbtn ghostbtn" id="btnBack">返回主菜单</button>
     </div>
   </div>
 </div>
 
 <script>
-const state = {
-  mcpUrl: '', mcpKey: '', mcpCookie: '',
-  llmKey: '', llmModel: 'qwen-max', llmModelCustom: '',
-  llmUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
-  tools: [], history: [], callCount: 0,
-  mcpOk: false, llmOk: false, busy: false
+'use strict';
+/* ================= 工具 ================= */
+const $=s=>document.querySelector(s);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const VALUES=[1,2,3,4,5,6];
+const PIPS={1:['c'],2:['tl','br'],3:['tl','c','br'],4:['tl','tr','bl','br'],
+             5:['tl','tr','c','bl','br'],6:['tl','tr','ml','mr','bl','br']};
+const PP={tl:[22,22],tr:[78,22],ml:[22,50],mr:[78,50],bl:[22,78],br:[78,78],c:[50,50]};
+
+/* Lucide 图标内联（ISC License · lucide-static v1.58.0 · https://lucide.dev） */
+const IC={
+  coins:'<path d="M13.744 17.736a6 6 0 1 1-7.48-7.48"/><path d="M15 6h1v4"/><path d="m6.134 14.768.866-.5 2 3.464"/><circle cx="16" cy="8" r="6"/>',
+  lightbulb:'<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+  'book-open':'<path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/>',
+  flag:'<path d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"/>',
+  swords:'<path d="m13 19 6-6"/><path d="M14.5 17.5 3.586 6.586A2 2 0 013 5.172V3h2.172a2 2 0 011.414.586L17.5 14.5"/><path d="m14.828 6.172 2.586-2.586A2 2 0 0118.828 3H21v2.172a2 2 0 01-.586 1.414l-2.586 2.586"/><path d="m16 16 4 4"/><path d="m19 21 2-2"/><path d="m5 14 4 4"/><path d="m5 21-2-2"/><path d="M7.5 16.5 4 20"/>',
+  'volume-2':'<path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/>',
+  'volume-x':'<path d="M11 4.702a.7.7 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.7.7 0 0 0 11 19.298z"/><path d="m16.5 14.5 5-5"/><path d="m16.5 9.5 5 5"/>',
+  'party-popper':'<path d="M5.8 11.3 2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10"/><path d="m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11c-.11.7-.72 1.22-1.43 1.22H17"/><path d="m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7"/><path d="M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2Z"/>',
+  skull:'<path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/>',
+  scissors:'<circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/>',
+  hand:'<path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+  'hand-fist':'<path d="M12.035 17.012a3 3 0 0 0-3-3l-.311-.002a.72.72 0 0 1-.505-1.229l1.195-1.195A2 2 0 0 1 10.828 11H12a2 2 0 0 0 0-4H9.243a3 3 0 0 0-2.122.879l-2.707 2.707A4.83 4.83 0 0 0 3 14a8 8 0 0 0 8 8h2a8 8 0 0 0 8-8V7a2 2 0 1 0-4 0v2a2 2 0 1 0 4 0"/><path d="M13.888 9.662A2 2 0 0 0 17 8V5A2 2 0 1 0 13 5"/><path d="M9 5A2 2 0 1 0 5 5V10"/><path d="M9 7V4A2 2 0 1 1 13 4V7.268"/>',
+  'circle-help':'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  'arrow-right':'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+};
+const ic=n=>'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>';
+
+function makeDie(v,cls=''){
+  const d=document.createElement('div'); d.className='die '+cls;
+  d.style.setProperty('--tilt',(Math.random()*8-4).toFixed(1)+'deg');
+  setFace(d,v); return d;
+}
+function setFace(d,v){
+  d.dataset.v=v; d.querySelectorAll('i').forEach(x=>x.remove());
+  PIPS[v].forEach(p=>{const i=document.createElement('i');const[x,y]=PP[p];
+    i.style.left=x+'%';i.style.top=y+'%';d.appendChild(i);});
+}
+function colScore(col){
+  const cnt={};for(const v of col)cnt[v]=(cnt[v]||0)+1;
+  let s=0;for(const v in cnt)s+=Math.pow(+v,cnt[v]);
+  return s;
+}
+const total=b=>b.reduce((a,c)=>a+colScore(c),0);
+function expr(col){
+  const cnt={};for(const v of col)cnt[v]=(cnt[v]||0)+1;
+  return Object.keys(cnt).map(Number).sort((a,b)=>b-a)
+    .map(v=>Array(cnt[v]).fill(v).join('×')).join('+');
+}
+const isFull=b=>b.every(c=>c.length===3);
+
+/* ================= 音效（WebAudio 合成，无外部资源） ================= */
+let AC=null,muted=localStorage.getItem('kb_mute')==='1';
+function ac(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==='suspended')AC.resume();return AC;}
+function tone(f,dur,type='triangle',vol=.2,delay=0,slideTo=null){
+  const c=ac(),t=c.currentTime+delay,o=c.createOscillator(),g=c.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(slideTo)o.frequency.exponentialRampToValueAtTime(slideTo,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.012);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.05);
+}
+function noise(dur=.08,fc=1200,vol=.3,delay=0){
+  const c=ac(),t=c.currentTime+delay,n=Math.floor(c.sampleRate*dur),
+        b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=c.createBufferSource();s.buffer=b;
+  const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=fc;f.Q.value=.8;
+  const g=c.createGain();g.gain.value=vol;
+  s.connect(f);f.connect(g);g.connect(c.destination);s.start(t);
+}
+const SND={
+  click:()=>tone(620,.05,'square',.06),
+  roll:()=>{noise(.05,1600,.22);noise(.05,1300,.2,.11);noise(.06,1000,.22,.22);},
+  place:()=>{noise(.06,700,.5);tone(130,.1,'triangle',.28);},
+  knock:()=>{tone(560,.16,'square',.15,0,140);noise(.12,600,.4,.02);},
+  win:()=>[523,659,784,1047].forEach((f,i)=>tone(f,i===3?.34:.13,'triangle',.22,i*.13)),
+  lose:()=>{tone(311,.28,'sine',.24);tone(233,.42,'sine',.24,.24);},
+  coin:()=>{tone(988,.07,'square',.09);tone(1319,.12,'square',.09,.07);},
+};
+function snd(n){if(muted)return;try{SND[n]()}catch(e){}}
+
+/* ================= 状态 ================= */
+let boards={you:[[],[],[]],rat:[[],[],[]]};
+let phase='menu';           // menu|idle|rolling|placing|wait|rat|over
+let die=null,bet=5,busy=false;
+let coins=+(localStorage.getItem('kb_coins')??30);
+const saveCoins=()=>localStorage.setItem('kb_coins',coins);
+
+// 联机状态
+let isOnline=false;
+let isHost=false;
+let peer=null;
+let conn=null;
+let myRps=null;
+let oppRps=null;
+let currentRoom=null;
+let rematchPending=false;
+
+/* ================= DOM 引用 ================= */
+const colEls={you:[],rat:[]},slotEls={you:[],rat:[]};
+function buildBoards(){
+  for(const side of ['you','rat']){
+    const board=$(side==='you'?'#boardYou':'#boardRat');board.innerHTML='';
+    colEls[side]=[];slotEls[side]=[];
+    for(let c=0;c<3;c++){
+      const col=document.createElement('div');col.className='col';
+      const slots=[];
+      for(let s=0;s<3;s++){const sl=document.createElement('div');sl.className='slot';
+        col.appendChild(sl);slots.push(sl);}
+      board.appendChild(col);colEls[side].push(col);slotEls[side].push(slots);
+      if(side==='you'){
+        col.addEventListener('click',()=>onColClick(c));
+        col.addEventListener('mouseenter',()=>onColHover(c));
+        col.addEventListener('mouseleave',clearPreview);
+      }
+    }
+  }
+}
+
+/* ================= 渲染 ================= */
+function updateScores(anim=true){
+  for(let c=0;c<3;c++){
+    const r=$('#csR'+c),y=$('#csY'+c);
+    const rv=colScore(boards.rat[c]),yv=colScore(boards.you[c]);
+    if(r.textContent!=String(rv)){r.textContent=rv;if(anim)reBump(r);}
+    if(y.textContent!=String(yv)){y.textContent=yv;if(anim)reBump(y);}
+  }
+  const rt=$('#ratTotal'),yt=$('#youTotal');
+  const R=total(boards.rat),Y=total(boards.you);
+  if(rt.textContent!=String(R)){rt.textContent=R;if(anim)reBump(rt);}
+  if(yt.textContent!=String(Y)){yt.textContent=Y;if(anim)reBump(yt);}
+}
+function reBump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+
+function renderCol(side,c){
+  slotEls[side][c].forEach(sl=>sl.querySelectorAll('.die:not(.fly)').forEach(d=>d.remove()));
+  boards[side][c].forEach((v,i)=>{
+    const ex=slotEls[side][c][i].querySelector('.die');
+    if(!ex)slotEls[side][c][i].appendChild(makeDie(v));
+    else if(ex.dataset.v!=v)setFace(ex,v);
+  });
+}
+function animatePlace(side,c,si,v){
+  slotEls[side][c][si].appendChild(makeDie(v,'pop'));
+}
+function flyDie(side,c,si,k){
+  const el=slotEls[side][c][si].querySelector('.die');if(!el)return;
+  el.style.setProperty('--fx',(60+Math.random()*50)*(Math.random()<.5?-1:1)+'px');
+  el.style.animationDelay=(k*.09)+'s';el.classList.add('fly');
+  setTimeout(()=>el.remove(),800);
+}
+function clearBoardDom(){
+  document.querySelectorAll('#boardYou .die, #boardRat .die').forEach(d=>d.remove());
+}
+
+function setActive(side){
+  $('#plateYou').classList.toggle('active',side==='you');
+  $('#plateRat').classList.toggle('active',side==='rat');
+  $('#boardYou').classList.toggle('active',side==='you');
+  $('#boardRat').classList.toggle('active',side==='rat');
+}
+function hint(html){$('#hintbar').innerHTML=ic('lightbulb')+html;}
+let quipTimer=null;
+function quip(t,ms=2400){
+  const q=$('#quip');q.textContent=t;q.classList.add('show');
+  clearTimeout(quipTimer);quipTimer=setTimeout(()=>q.classList.remove('show'),ms);
+}
+
+/* ================= 预览 ================= */
+function onColHover(c){
+  if(phase!=='placing'||busy)return;
+  if(boards.you[c].length>=3)return;
+  const col=colEls.you[c];
+  // 幽灵骰子
+  const si=boards.you[c].length;
+  const g=makeDie(die,'ghost');slotEls.you[c][si].appendChild(g);
+  // 分数标签
+  const cur=colScore(boards.you[c]),nx=colScore([...boards.you[c],die]);
+  const t=document.createElement('div');t.className='tag';
+  t.innerHTML=`${expr([...boards.you[c],die])} = <b>${nx}</b>（+${nx-cur}）`;
+  col.appendChild(t);
+  // 顶掉预览
+  const doomed=boards.rat[c].filter(x=>x===die).length;
+  if(doomed){
+    slotEls.rat[c].forEach(sl=>{const d=sl.querySelector('.die');
+      if(d&&+d.dataset.v===die)d.classList.add('doomed');});
+    const t2=document.createElement('div');t2.className='tag knock';
+    const oppName=isOnline?'对手':'拉陶';
+    t2.innerHTML=`${ic('swords')} 顶掉${oppName}的 ${doomed>1?doomed+' 颗 ':''}<b>${die}</b>！`;
+    col.appendChild(t2);
+  }
+}
+function clearPreview(){
+  document.querySelectorAll('.die.ghost').forEach(d=>d.remove());
+  document.querySelectorAll('.tag').forEach(t=>t.remove());
+  document.querySelectorAll('.die.doomed').forEach(d=>d.classList.remove('doomed'));
+}
+
+/* ================= 规则核心 ================= */
+function placeDie(side,c,v){ // 返回被顶掉的骰子在对手列中的下标
+  const opp=side==='you'?'rat':'you';
+  const idx=boards[opp][c].map((x,i)=>x===v?i:-1).filter(i=>i>=0);
+  boards[opp][c]=boards[opp][c].filter(x=>x!==v);
+  boards[side][c].push(v);
+  return idx;
+}
+
+/* ================= AI ================= */
+function aiChoose(v){
+  const cands=[];
+  for(let c=0;c<3;c++){
+    if(boards.rat[c].length>=3)continue;
+    const myGain=colScore([...boards.rat[c],v])-colScore(boards.rat[c]);
+    const oc=boards.you[c];
+    const oppLoss=colScore(oc)-colScore(oc.filter(x=>x!==v));
+    cands.push({c,s:myGain+oppLoss*1.15});
+  }
+  cands.sort((a,b)=>b.s-a.s);
+  const pick=Math.random()<.78?cands[0]:rnd(cands.slice(0,Math.min(2,cands.length)));
+  return pick.c;
+}
+
+/* ================= 网络消息 ================= */
+function sendNet(msg){
+  if(conn&&conn.open){
+    try{conn.send(msg);}catch(e){console.error('发送失败',e);}
+  }
+}
+
+function handleNetMessage(msg){
+  if(!msg||!msg.type)return;
+  switch(msg.type){
+    case 'rps':
+      oppRps=msg.choice;
+      checkRpsReveal();
+      break;
+    case 'roll':
+      handleOpponentRoll(msg.die);
+      break;
+    case 'place':
+      handleOpponentPlace(msg.col,msg.die);
+      break;
+    case 'rematch':
+      handleOpponentRematch();
+      break;
+  }
+}
+
+/* ================= 流程 ================= */
+function rollAnim(side,fixedVal=null){
+  return new Promise(res=>{
+    const holder=$(side==='you'?'#youDie':'#ratDie');
+    holder.innerHTML='';
+    const d=makeDie(rnd(VALUES),'tumbling');holder.appendChild(d);
+    snd('roll');
+    const iv=setInterval(()=>setFace(d,rnd(VALUES)),90);
+    setTimeout(()=>{
+      clearInterval(iv);
+      const v=(fixedVal!==null&&fixedVal!==undefined)?fixedVal:rnd(VALUES);
+      setFace(d,v);
+      d.classList.remove('tumbling');res(v);
+    },760);
+  });
+}
+
+async function playerRoll(){ // 你的回合自动掷骰（放置由你决定）
+  if(phase!=='idle'||busy)return;
+  busy=true;phase='rolling';
+  die=await rollAnim('you');
+  if(isOnline)sendNet({type:'roll',die});
+  phase='placing';busy=false;
+  markPickable();
+  hint(`掷出 <b>${die}</b>——点击一列放置（可按 1 / 2 / 3 键，悬停可预览分数）`);
+}
+
+function markPickable(){
+  colEls.you.forEach((col,c)=>{
+    const full=boards.you[c].length>=3;
+    col.classList.toggle('pickable',phase==='placing'&&!full);
+    col.classList.toggle('full',full);
+  });
+}
+
+function onColClick(c){
+  if(phase!=='placing'||busy)return;
+  if(boards.you[c].length>=3){hint('这一列已经满了，换一列吧！');return;}
+  busy=true;phase='wait';
+  const v=die;die=null;
+  clearPreview();markClear();
+  $('#youDie').innerHTML='';
+  const removed=placeDie('you',c,v);
+  animatePlace('you',c,boards.you[c].length-1,v);snd('place');
+  updateScores();
+  if(isOnline)sendNet({type:'place',col:c,die:v});
+
+  const oppName=isOnline?'对手':'拉陶';
+  if(removed.length){
+    hint(`你放下 <b>${v}</b>，顶掉了${oppName}的 ${removed.length} 颗 ${v}！`);
+    if(!isOnline&&removed.length>=2)quip('哎呀，我的骰子！');
+    setTimeout(()=>{
+      snd('knock');
+      removed.forEach((si,k)=>flyDie('rat',c,si,k));
+      setTimeout(()=>{renderCol('rat',c);updateScores();afterMove('you');},560);
+    },300);
+  }else{
+    hint(`你把 <b>${v}</b> 放进了第 ${c+1} 列`);
+    setTimeout(()=>afterMove('you'),430);
+  }
+}
+function markClear(){colEls.you.forEach(col=>col.classList.remove('pickable','full'));}
+
+function afterMove(side){
+  if(isFull(boards.you)||isFull(boards.rat)){endGame();return;}
+  if(!isOnline){
+    if(side==='you')ratTurn();else beginPlayerTurn();
+  }else{
+    if(side==='you')waitOpponentTurn();else beginPlayerTurn();
+  }
+}
+
+function beginPlayerTurn(){
+  phase='idle';busy=false;setActive('you');
+  hint('你的回合——自动掷骰中…');
+  setTimeout(()=>{if(phase==='idle')playerRoll();},650);
+}
+
+function waitOpponentTurn(){
+  phase='rat';setActive('rat');markClear();
+  hint('对手的回合——等待对方掷骰…');
+}
+
+async function handleOpponentRoll(v){
+  hint(`对手掷出了 <b>${v}</b>，正在选择列…`);
+  await rollAnim('rat',v);
+}
+
+function handleOpponentPlace(c,v){
+  $('#ratDie').innerHTML='';
+  const removed=placeDie('rat',c,v);
+  animatePlace('rat',c,boards.rat[c].length-1,v);snd('place');
+  updateScores();
+  if(removed.length){
+    hint(`对手放下 <b>${v}</b>，顶掉了你的 ${removed.length} 颗 ${v}！`);
+    quip('糟糕，被顶掉了！');
+    setTimeout(()=>{
+      snd('knock');
+      removed.forEach((si,k)=>flyDie('you',c,si,k));
+      setTimeout(()=>{renderCol('you',c);updateScores();afterMove('rat');},560);
+    },300);
+  }else{
+    hint(`对手把 <b>${v}</b> 放进了第 ${c+1} 列`);
+    setTimeout(()=>afterMove('rat'),430);
+  }
+}
+
+async function ratTurn(){
+  phase='rat';setActive('rat');
+  hint('拉陶搓了搓骰子……');
+  await wait(480);
+  const v=await rollAnim('rat');
+  if(v===6&&Math.random()<.35)quip('嘿咻，好点数！');
+  hint(`拉陶掷出了 <b>${v}</b>`);
+  await wait(620);
+  const c=aiChoose(v);
+  $('#ratDie').innerHTML='';
+  const removed=placeDie('rat',c,v);
+  animatePlace('rat',c,boards.rat[c].length-1,v);snd('place');
+  updateScores();
+  if(removed.length){
+    hint(`拉陶放下 <b>${v}</b>，顶掉了你的 ${removed.length} 颗 ${v}！`);
+    quip('嘿嘿，抱歉啦。');
+    setTimeout(()=>{
+      snd('knock');
+      removed.forEach((si,k)=>flyDie('you',c,si,k));
+      setTimeout(()=>{renderCol('you',c);updateScores();afterMove('rat');},560);
+    },300);
+  }else{
+    hint(`拉陶把 <b>${v}</b> 放进了他的第 ${c+1} 列`);
+    setTimeout(()=>afterMove('rat'),430);
+  }
+}
+
+/* ================= 开局 / 结算 ================= */
+const RPS={rock:'hand-fist',scissors:'scissors',paper:'hand'};
+const BEATS={rock:'scissors',scissors:'paper',paper:'rock'};
+let rpsResolve=null;
+
+function resetRpsUi(){
+  const y=$('#rpsYou'),r=$('#rpsRat');
+  y.innerHTML=ic('circle-help');r.innerHTML=ic('circle-help');
+  y.classList.add('shake');r.classList.add('shake');
+  y.classList.remove('reveal');r.classList.remove('reveal');
+  $('#rpsMsg').textContent='赢的先掷——出招吧！';
+  document.querySelectorAll('.rpsbtn').forEach(b=>b.disabled=false);
+}
+
+async function rpsPick(mine){
+  document.querySelectorAll('.rpsbtn').forEach(b=>b.disabled=true);
+
+  if(!isOnline){
+    const y=$('#rpsYou'),r=$('#rpsRat');
+    y.classList.remove('shake');r.classList.remove('shake');
+    $('#rpsMsg').textContent='石头——剪刀——布！';
+    await wait(700);
+    const ratPick=rnd(['rock','scissors','paper']);
+    y.innerHTML=ic(RPS[mine]);r.innerHTML=ic(RPS[ratPick]);
+    y.classList.add('reveal');r.classList.add('reveal');
+    snd('place');
+    if(mine===ratPick){
+      $('#rpsMsg').textContent='平局！再来一次';
+      snd('click');
+      await wait(950);
+      resetRpsUi();
+      return;
+    }
+    const youWin=BEATS[mine]===ratPick;
+    $('#rpsMsg').innerHTML=youWin
+      ?`${ic('party-popper')} 你赢了——<b>你先手！</b>`
+      :`${ic('skull')} 拉陶赢了——他先手`;
+    snd(youWin?'coin':'knock');
+    await wait(1100);
+    $('#rpsOv').classList.remove('show');
+    if(rpsResolve){const f=rpsResolve;rpsResolve=null;f(youWin);}
+    return;
+  }
+
+  // 联机猜拳
+  myRps=mine;
+  $('#rpsMsg').textContent='已出招，等待对手出招…';
+  sendNet({type:'rps',choice:mine});
+  checkRpsReveal();
+}
+
+async function checkRpsReveal(){
+  if(!myRps||!oppRps)return;
+  const y=$('#rpsYou'),r=$('#rpsRat');
+  y.classList.remove('shake');r.classList.remove('shake');
+  $('#rpsMsg').textContent='石头——剪刀——布！';
+  await wait(600);
+  y.innerHTML=ic(RPS[myRps]);r.innerHTML=ic(RPS[oppRps]);
+  y.classList.add('reveal');r.classList.add('reveal');
+  snd('place');
+  if(myRps===oppRps){
+    $('#rpsMsg').textContent='平局！再来一次';
+    snd('click');
+    await wait(1000);
+    myRps=null;oppRps=null;
+    resetRpsUi();
+    return;
+  }
+  const youWin=BEATS[myRps]===oppRps;
+  $('#rpsMsg').innerHTML=youWin
+    ?`${ic('party-popper')} 你赢了——<b>你先手！</b>`
+    :`${ic('skull')} 对手赢了——对方先手`;
+  snd(youWin?'coin':'knock');
+  await wait(1200);
+  $('#rpsOv').classList.remove('show');
+  const win=youWin;
+  myRps=null;oppRps=null;
+  if(rpsResolve){const f=rpsResolve;rpsResolve=null;f(win);}
+}
+
+function decideFirst(){
+  return new Promise(res=>{
+    rpsResolve=res;
+    resetRpsUi();
+    $('#rpsOv').classList.add('show');
+  });
+}
+
+function setOpponentUI(online){
+  isOnline=online;
+  $('#ratLabel').textContent=online?'对手':'拉陶';
+  $('#nameRat').textContent=online?'对手 (好友)':'拉陶';
+  $('#rpsRatLabel').textContent=online?'对手':'拉陶';
+}
+
+async function startGame(){
+  setOpponentUI(false);
+  if(coins<bet){openStart();return;}
+  coins-=bet;saveCoins();$('#coinNum').textContent=coins;
+  boards={you:[[],[],[]],rat:[[],[],[]]};die=null;busy=false;
+  clearBoardDom();clearPreview();markClear();
+  $('#youDie').innerHTML='';$('#ratDie').innerHTML='';
+  updateScores(false);
+  document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show'));
+  const youFirst=await decideFirst();
+  if(youFirst){quip('好吧，你先。');beginPlayerTurn();}
+  else{quip('看我的！');ratTurn();}
+}
+
+async function startOnlineGame(){
+  rematchPending=false;
+  setOpponentUI(true);
+  boards={you:[[],[],[]],rat:[[],[],[]]};die=null;busy=false;
+  clearBoardDom();clearPreview();markClear();
+  $('#youDie').innerHTML='';$('#ratDie').innerHTML='';
+  updateScores(false);
+  document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show'));
+  const youFirst=await decideFirst();
+  if(youFirst){hint('你赢了猜拳，你先掷！');beginPlayerTurn();}
+  else{hint('对手赢了猜拳，等待对方掷骰…');waitOpponentTurn();}
+}
+
+function endGame(){
+  phase='over';setActive(null);markClear();
+  const Y=total(boards.you),R=total(boards.rat);
+  let title,sub,sfx;
+
+  if(!isOnline){
+    if(Y>R){
+      title='你赢了！';sfx='win';
+      coins+=bet*2;saveCoins();
+      sub=`拉陶掏出钱包，赌注翻倍奉还：<b>+${bet*2} ${ic('coins')}</b>（净赚 ${bet}）`;
+    }else if(Y<R){
+      title='你输了……';sfx='lose';
+      sub=`那 ${bet} 枚筹码归拉陶了<br>「再试一次？我手气正好。」——拉陶`;
+    }else{
+      title='平局！';sfx='click';
+      coins+=bet;saveCoins();
+      sub=`势均力敌，赌注退还（<b>${bet} ${ic('coins')}</b>）`;
+    }
+  }else{
+    if(Y>R){
+      title='你赢了！';sfx='win';
+      sub=`你 <b>${Y}</b> ： <b>${R}</b> 对手<br>精彩的较量，技高一筹！`;
+    }else if(Y<R){
+      title='你输了……';sfx='lose';
+      sub=`你 <b>${Y}</b> ： <b>${R}</b> 对手<br>惜败！下次一定能赢回来！`;
+    }else{
+      title='平局！';sfx='click';
+      sub=`你 <b>${Y}</b> ： <b>${R}</b> 对手<br>旗鼓相当的对手！`;
+    }
+  }
+
+  setTimeout(()=>{
+    snd(sfx);if(Y>R)setTimeout(()=>snd('coin'),650);
+    $('#endTitle').innerHTML=title;
+    $('#endSub').innerHTML=sub;
+    $('#coinNum').textContent=coins;
+    $('#btnAgain').disabled=false;
+    $('#endOv').classList.add('show');
+    if(!isOnline){
+      if(Y>R)quip('下次我会赢回来的！');
+      if(Y<R)quip('多谢惠顾，嘿嘿。');
+    }
+  },900);
+}
+
+function handleOpponentRematch(){
+  if(rematchPending){
+    startOnlineGame();
+  }else{
+    quip('对手发起了再战！',3000);
+    $('#endSub').innerHTML+='<br><b style="color:var(--t5)">对手已准备好再战！点击“再来一局”开赛</b>';
+  }
+}
+
+/* ================= 界面：开始/教程/联机 ================= */
+function openStart(){
+  const afford=[25,10,5].find(v=>v<=coins);
+  if(afford&&coins<bet)bet=afford;
+  $('#stCoins').textContent=coins;
+  const chips=$('#chips');chips.innerHTML='';
+  [5,10,25].forEach(v=>{
+    const b=document.createElement('button');b.className='chip';b.textContent=v;
+    b.disabled=coins<v;
+    if(v===bet&&coins>=v)b.classList.add('sel');
+    b.onclick=()=>{if(coins<v)return;bet=v;snd('click');
+      chips.querySelectorAll('.chip').forEach(x=>x.classList.toggle('sel',x===b));};
+    chips.appendChild(b);
+  });
+  $('#btnStart').disabled=coins<5;
+  $('#almsBox').style.display=coins<5?'block':'none';
+  $('#startOv').classList.add('show');
+}
+
+function openOnlineModal(){
+  $('#startOv').classList.remove('show');
+  $('#netStatus').style.display='none';
+  $('#roomCodeBox').style.display='none';
+  $('#netActions').style.display='flex';
+  $('#onlineOv').classList.add('show');
+}
+
+function genRoomId(){
+  const chars='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let s='';
+  for(let i=0;i<4;i++)s+=chars[Math.floor(Math.random()*chars.length)];
+  return s;
+}
+
+const PEER_CFG={
+  debug:1,
+  config:{
+    iceServers:[
+      {urls:'stun:stun.cloudflare.com:3478'},
+      {urls:'stun:stun.qq.com:3478'},
+      {urls:'stun:stun.l.google.com:19302'}
+    ]
+  }
 };
 
-const SYSTEM_PROMPT = `你是一个专业的 ITSM（IT 服务管理）智能助手，连接了 Gemmb 平台的 MCP 工具集。
-你可以帮助用户查询/创建/更新工单（事件、问题、变更、请求），查询设备状态和告警，搜索知识库，查询 SLA 状态。
-原则：用中文回复；调用工具前简短说明意图；以清晰方式呈现结果；数据全部来自工具，不编造；遇错误给出建议。`;
-
-function getActualModel() {
-  if (state.llmModelCustom && state.llmModelCustom.trim()) {
-    return state.llmModelCustom.trim();
-  }
-  return state.llmModel;
+function initPeer(id,cb){
+  if(peer&&!peer.destroyed)peer.destroy();
+  peer=id?new Peer(id,PEER_CFG):new Peer(PEER_CFG);
+  peer.on('open',pid=>{
+    console.log('Peer connected with ID:', pid);
+    if(cb)cb(pid);
+  });
+  peer.on('error',err=>{
+    console.error('Peer error:',err);
+    $('#netStatus').style.display='block';
+    $('#netStatusText').textContent='连接提示: '+(err.type==='unavailable-id'?'该房间号已存在，请换一个':'网络中继异常，请重试');
+  });
+  return peer;
 }
 
-function openModal() {
-  document.getElementById('cfg-mcp-url').value = state.mcpUrl;
-  document.getElementById('cfg-mcp-key').value = state.mcpKey;
-  document.getElementById('cfg-mcp-cookie').value = state.mcpCookie;
-  document.getElementById('cfg-llm-key').value = state.llmKey;
-  document.getElementById('cfg-llm-model').value = state.llmModel;
-  document.getElementById('cfg-llm-model-custom').value = state.llmModelCustom;
-  document.getElementById('cfg-llm-url').value = state.llmUrl;
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-function handleOverlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
-
-async function saveAndConnect() {
-  state.mcpUrl   = document.getElementById('cfg-mcp-url').value.trim();
-  state.mcpKey   = document.getElementById('cfg-mcp-key').value.trim();
-  state.mcpCookie = document.getElementById('cfg-mcp-cookie').value.trim();
-  state.llmKey   = document.getElementById('cfg-llm-key').value.trim();
-  state.llmModel = document.getElementById('cfg-llm-model').value;
-  state.llmModelCustom = document.getElementById('cfg-llm-model-custom').value.trim();
-  state.llmUrl   = document.getElementById('cfg-llm-url').value.trim();
-  closeModal();
-
-  // Update LLM status independently
-  const llmDot = document.getElementById('llm-dot');
-  const llmLabel = document.getElementById('llm-label');
-  if (state.llmKey) {
-    state.llmOk = true;
-    llmDot.className = 'status-dot ok';
-    llmLabel.textContent = getActualModel();
-  } else {
-    state.llmOk = false;
-    llmDot.className = 'status-dot';
-    llmLabel.textContent = 'LLM 未配置';
-  }
-
-  // Connect MCP independently
-  await connectMcp();
-  refreshSendBtn();
-}
-
-async function connectMcp() {
-  if (!state.mcpUrl || !state.mcpKey) {
-    addSysMsg('⚠️ 请填写 MCP 服务地址和 AIKey。');
-    return;
-  }
-  setMcpStatus('busy', '连接中...');
-  try {
-    // 先测试连接
-    const headers = { 
-      'Content-Type': 'application/json', 
-      'AIKey': state.mcpKey 
-    };
-    
-    // 如果有 Cookie，添加到请求头
-    if (state.mcpCookie) {
-      headers['Cookie'] = state.mcpCookie;
-    }
-    
-    const testResponse = await fetch(state.mcpUrl, {
-      method: 'POST',
-      headers: headers,
-      credentials: 'include',
-      body: JSON.stringify({ 
-        jsonrpc: '2.0', 
-        id: Date.now(), 
-        method: 'tools/list', 
-        params: {} 
-      })
-    });
-    
-    if (!testResponse.ok) {
-      throw new Error(`HTTP ${testResponse.status}: ${testResponse.statusText}`);
-    }
-    
-    const data = await testResponse.json();
-    console.log('MCP Response:', data);
-    
-    if (data.error) {
-      throw new Error(data.error.message || 'MCP 返回错误');
-    }
-    
-    state.tools = data.result?.tools || [];
-    state.mcpOk = true;
-    setMcpStatus('ok', `已连接 · ${state.tools.length} 个工具`);
-    renderToolList();
-    addSysMsg(`✅ MCP 连接成功，加载了 **${state.tools.length}** 个工具。`);
-    
-    if (state.tools.length === 0) {
-      addSysMsg('⚠️ 警告：MCP 服务返回了 0 个工具，请检查服务端配置。');
-    }
-  } catch (err) {
-    state.mcpOk = false;
-    setMcpStatus('err', '连接失败');
-    addSysMsg(`❌ MCP 连接失败：${err.message}`);
-    console.error('MCP connection error:', err);
-  }
-}
-
-function setMcpStatus(type, text) {
-  const cls = type === 'ok' ? 'ok' : type === 'err' ? 'err' : 'busy';
-  document.getElementById('mcp-dot').className = `status-dot ${cls}`;
-  document.getElementById('mcp-label').textContent = text;
-}
-
-function refreshSendBtn() {
-  const hasText = document.getElementById('user-input').value.trim().length > 0;
-  document.getElementById('send-btn').disabled = !(state.mcpOk && state.llmOk && hasText && !state.busy);
-}
-
-async function mcpCall(method, params = {}) {
-  const headers = { 
-    'Content-Type': 'application/json', 
-    'AIKey': state.mcpKey 
+function setupConnection(c){
+  console.log('setupConnection started, isHost:', isHost, 'conn.open:', c.open);
+  conn=c;
+  const onOpen=()=>{
+    console.log('Connection open triggered! isHost:', isHost);
+    $('#netStatus').style.display='block';
+    $('#netStatusText').textContent='连接成功！准备进入对战…';
+    setTimeout(()=>{
+      $('#onlineOv').classList.remove('show');
+      startOnlineGame();
+    },600);
   };
-  
-  if (state.mcpCookie) {
-    headers['Cookie'] = state.mcpCookie;
+  if(conn.open){
+    onOpen();
+  }else{
+    conn.on('open',onOpen);
   }
-  
-  const resp = await fetch(state.mcpUrl, {
-    method: 'POST',
-    headers: headers,
-    credentials: 'include',
-    body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params })
+  conn.on('data',data=>{
+    console.log('收到网络数据:', data);
+    handleNetMessage(data);
   });
-  
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-  const data = await resp.json();
-  if (data.error) throw new Error(data.error.message || 'MCP 错误');
-  return data.result;
-}
-
-async function callLLM(messages) {
-  const actualModel = getActualModel();
-  
-  const requestBody = {
-    model: actualModel,
-    messages: messages,
-    tools: state.tools.map(t => ({
-      type: 'function',
-      function: {
-        name: t.name,
-        description: (t.description || '').replace(/\r?\n/g, ' ').slice(0, 300),
-        parameters: t.inputSchema || { type: 'object', properties: {}, required: [] }
-      }
-    })),
-    tool_choice: 'auto',
-    max_tokens: 4096,
-    temperature: 0.3
-  };
-  
-  console.log('LLM Request:', { url: state.llmUrl, model: actualModel, toolsCount: state.tools.length });
-  
-  const resp = await fetch(state.llmUrl, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json', 
-      'Authorization': `Bearer ${state.llmKey}`
-    },
-    body: JSON.stringify(requestBody)
+  conn.on('error',err=>console.error('Connection error:', err));
+  conn.on('close',()=>{
+    console.log('Connection closed');
+    if(isOnline&&phase!=='menu'){
+      hint('<b>对手已断开连接</b>');
+      quip('对手已离线');
+      setTimeout(()=>{
+        alert('对手已离开房间，将返回主界面');
+        location.hash='';
+        location.reload();
+      },800);
+    }
   });
-  
-  if (!resp.ok) {
-    const errText = await resp.text();
-    console.error('LLM API Error:', resp.status, errText);
-    throw new Error(`百炼 API HTTP ${resp.status}: ${errText.substring(0, 200)}`);
-  }
-  return resp.json();
 }
 
-async function agentLoop(userText, bubbleEl, bodyEl) {
-  const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
-    ...state.history,
-    { role: 'user', content: userText }
-  ];
-  let replyText = '';
-  let iter = 0;
-
-  while (iter++ < 8) {
-    setThinking(bubbleEl, replyText, '思考中...');
-    let resp;
-    try { 
-      resp = await callLLM(messages); 
-    } catch (err) { 
-      setFinal(bubbleEl, replyText + `\n\n**错误：** ${err.message}`); 
-      return;
-    }
-
-    const msg = resp.choices[0].message;
-    messages.push(msg);
-    if (msg.content) replyText = (replyText + msg.content).trim();
-
-    if (!msg.tool_calls?.length) {
-      setFinal(bubbleEl, replyText);
-      state.history.push({ role: 'user', content: userText });
-      state.history.push({ role: 'assistant', content: replyText });
-      if (state.history.length > 24) state.history = state.history.slice(-24);
-      return;
-    }
-
-    for (const tc of msg.tool_calls) {
-      const name = tc.function.name;
-      let args = {};
-      try { args = JSON.parse(tc.function.arguments || '{}'); } catch(e) {}
-
-      const cardEl = addToolCard(bodyEl, name, args, 'running');
-      setThinking(bubbleEl, replyText, `调用: ${name.split('__')[1] || name}`);
-
-      const t0 = Date.now();
-      let toolResult;
-      try {
-        toolResult = await mcpCall('tools/call', { name, arguments: args });
-        cardEl.className = 'tool-card ok';
-        addLogItem(name, Date.now() - t0, true);
-      } catch (err) {
-        toolResult = { error: err.message };
-        cardEl.className = 'tool-card err';
-        addLogItem(name, Date.now() - t0, false);
-      }
-      messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(toolResult) });
-    }
-  }
-  setFinal(bubbleEl, replyText + '\n\n*（已达最大工具调用轮次）*');
-}
-
-function setThinking(el, text, hint) {
-  el.innerHTML = (text ? md(text) + '<br>' : '') +
-    `<div class="thinking"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><span>${hint}</span></div>`;
-  scrollBottom();
-}
-function setFinal(el, text) { el.innerHTML = md(text || '（无回复）'); scrollBottom(); }
-
-function addToolCard(bodyEl, name, args, status) {
-  const el = document.createElement('div');
-  el.className = `tool-card ${status}`;
-  const short = name.split('__')[1] || name;
-  const group = name.includes('__') ? name.split('__')[0] : '';
-  el.innerHTML = `<div class="tool-card-head"><span class="tool-tag">${short}</span><span class="tool-group-text">${group}</span></div>
-    <div class="tool-args">${JSON.stringify(args, null, 2).slice(0, 200)}</div>`;
-  bodyEl.appendChild(el);
-  scrollBottom();
-  return el;
-}
-
-function addLogItem(name, ms, ok) {
-  state.callCount++;
-  document.getElementById('call-count').textContent = state.callCount;
-  const log = document.getElementById('call-log');
-  const ph = log.querySelector('div[style]');
-  if (ph) ph.remove();
-  const el = document.createElement('div');
-  el.className = `log-item ${ok ? 'ok' : 'err'}`;
-  el.innerHTML = `<div class="fn">${(name.split('__')[1] || name).slice(0, 26)}</div><div class="meta">${ms}ms · ${ok ? '成功' : '失败'}</div>`;
-  log.insertBefore(el, log.firstChild);
-}
-
-function renderToolList() {
-  const container = document.getElementById('tool-list');
-  document.getElementById('tool-count').textContent = state.tools.length;
-  const groups = {};
-  state.tools.forEach(t => {
-    const g = t.name.includes('__') ? t.name.split('__')[0] : 'Other';
-    if (!groups[g]) groups[g] = [];
-    groups[g].push(t);
+function createRoom(){
+  const rid=genRoomId();
+  currentRoom=rid;
+  isHost=true;
+  $('#netStatus').style.display='block';
+  $('#netStatusText').textContent='正在向中继服务器申请房间…';
+  $('#netActions').style.display='none';
+  const p=initPeer('kb-'+rid,()=>{
+    $('#netStatusText').textContent='房间已就绪！复制链接发给朋友即可开打：';
+    $('#roomCodeBox').style.display='block';
+    $('#roomCodeDisplay').textContent=rid;
+    try{history.replaceState(null,'','#'+rid);}catch(e){}
   });
-  if (Object.keys(groups).length === 0) {
-    container.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:6px">暂无工具，请检查 MCP 连接</div>';
-    return;
-  }
-  container.innerHTML = Object.entries(groups).map(([g, ts]) =>
-    `<div class="tool-group-label">${g}</div>` +
-    ts.map(t => `<div class="tool-item" title="${esc((t.description||'').replace(/\r?\n/g,' '))}">
-      <div class="tool-item-name">${t.name.split('__')[1] || t.name}</div>
-      <div class="tool-item-desc">${(t.description||'').replace(/\r?\n/g,' ').slice(0,55)}</div>
-    </div>`).join('')
-  ).join('');
+  p.on('connection',c=>{
+    console.log('Host 收到 Guest 接入请求');
+    setupConnection(c);
+  });
 }
 
-async function sendMessage() {
-  if (state.busy) return;
-  const input = document.getElementById('user-input');
-  const text = input.value.trim();
-  if (!text) return;
-  state.busy = true;
-  input.value = ''; autoResize(input);
-  refreshSendBtn();
-  addUserMsg(text);
-  const { bubbleEl, bodyEl } = addAssistantMsg();
-  try { await agentLoop(text, bubbleEl, bodyEl); }
-  catch (err) { 
-    console.error('Agent loop error:', err);
-    setFinal(bubbleEl, `异常：${err.message}`); 
-  }
-  finally {
-    state.busy = false;
-    refreshSendBtn();
-    input.focus();
-  }
+function joinRoom(rid){
+  rid=(rid||'').trim().toUpperCase();
+  if(!rid){alert('请输入房间号');return;}
+  currentRoom=rid;
+  $('#netStatus').style.display='block';
+  $('#netStatusText').textContent=`正在寻找并加入房间 ${rid}…`;
+  $('#netActions').style.display='none';
+  initPeer(null,()=>{
+    isHost=false;
+    console.log('Guest 正在呼叫 Host kb-' + rid);
+    const c=peer.connect('kb-'+rid,{reliable:true});
+    setupConnection(c);
+  });
 }
 
-function sendQuick(text) { 
-  document.getElementById('user-input').value = text; 
-  sendMessage(); 
-}
-
-function handleKey(e) { 
-  if (e.key === 'Enter' && !e.shiftKey) { 
-    e.preventDefault(); 
-    sendMessage(); 
-  } 
-}
-
-function autoResize(el) { 
-  el.style.height = 'auto'; 
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px'; 
-}
-
-function addUserMsg(text) {
-  removeEmpty();
-  const el = document.createElement('div');
-  el.className = 'msg user';
-  el.innerHTML = `<div class="msg-avatar">我</div><div class="msg-body"><div class="msg-bubble">${esc(text).replace(/\n/g,'<br>')}</div></div>`;
-  document.getElementById('messages').appendChild(el);
-  scrollBottom();
-}
-
-function addAssistantMsg() {
-  removeEmpty();
-  const el = document.createElement('div');
-  el.className = 'msg assistant';
-  el.innerHTML = `<div class="msg-avatar">AI</div><div class="msg-body"></div>`;
-  const bodyEl = el.querySelector('.msg-body');
-  const bubbleEl = document.createElement('div');
-  bubbleEl.className = 'msg-bubble';
-  bodyEl.appendChild(bubbleEl);
-  document.getElementById('messages').appendChild(el);
-  scrollBottom();
-  return { bubbleEl, bodyEl };
-}
-
-function addSysMsg(text) {
-  removeEmpty();
-  const el = document.createElement('div');
-  el.className = 'sys-msg';
-  el.innerHTML = md(text);
-  document.getElementById('messages').appendChild(el);
-  scrollBottom();
-}
-
-function removeEmpty() { 
-  const e = document.getElementById('empty-state'); 
-  if (e && e.parentNode) e.remove(); 
-}
-
-function scrollBottom() { 
-  const m = document.getElementById('messages'); 
-  setTimeout(() => m.scrollTop = m.scrollHeight, 30); 
-}
-
-function esc(s) { 
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); 
-}
-
-function md(text) {
-  let result = esc(text)
-    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g,'<em>$1</em>')
-    .replace(/`([^`]+)`/g,'<code>$1</code>')
-    .replace(/^#{1,3} (.+)$/gm,'<h3>$1</h3>');
-  
-  // 简单的列表处理
-  if (result.includes('<li>')) {
-    result = result.replace(/<li>([\s\S]*?)<\/li>/g, (match) => {
-      return `<li>${match.replace(/<\/?li>/g, '')}</li>`;
+function copyInviteLink(){
+  const url=location.origin+location.pathname+'#'+currentRoom;
+  const btn=$('#btnCopyLink');
+  const oldText=btn.textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>{
+      btn.textContent='链接已复制！快发给好友';
+      setTimeout(()=>btn.textContent=oldText,2500);
+    }).catch(()=>{
+      prompt('请手动复制对战链接：',url);
     });
+  }else{
+    prompt('请手动复制对战链接：',url);
   }
-  
-  result = result.replace(/\n\n+/g,'</p><p>');
-  result = result.replace(/\n/g,'<br>');
-  return result;
 }
 
-// 初始化
-document.getElementById('user-input').addEventListener('input', refreshSendBtn);
-openModal();
-
-// 添加 CORS 代理提示（如果需要）
-if (window.location.protocol === 'file:') {
-  addSysMsg('💡 提示：当前以文件协议打开，可能存在 CORS 限制。建议使用本地服务器运行（如 python -m http.server 8000）');
+function buildDemos(){
+  const mk=(v,red)=>{const w=document.createElement('div');w.className='mdie'+(red?' red':'');
+    w.dataset.v=v;
+    PIPS[v].forEach(p=>{const i=document.createElement('i');const[x,y]=PP[p];
+      i.style.left=x+'%';i.style.top=y+'%';w.appendChild(i);});
+    return w;};
+  const column=()=>{const sl=document.createElement('div');
+    sl.style.cssText='display:flex;flex-direction:column;gap:3px;align-items:center';
+    return sl;};
+  const emptySlot=()=>{const e=document.createElement('div');
+    e.style.cssText='width:26px;height:26px;border-radius:4px;background:var(--cell)';return e;};
+  // 步骤1：掷出 4 → 放进一列
+  const d1=$('#demo1');
+  d1.appendChild(mk(4));
+  const s=document.createElement('span');s.className='op';s.innerHTML=ic('arrow-right');d1.appendChild(s);
+  const c1=column();c1.appendChild(mk(4));c1.appendChild(emptySlot());c1.appendChild(emptySlot());
+  d1.appendChild(c1);
+  // 步骤2：5×5+2=27
+  const d2=$('#demo2');[5,5,2].forEach(v=>d2.appendChild(mk(v)));
+  const e=document.createElement('span');e.className='op';e.textContent='= 5×5+2 =';d2.appendChild(e);
+  const r=document.createElement('span');r.className='op';r.textContent='27';r.style.fontSize='20px';d2.appendChild(r);
+  // 步骤3：顶骰演示
+  const d3=$('#demo3');
+  const left=column();[3,3].forEach(v=>left.appendChild(mk(v)));
+  const ar=document.createElement('span');ar.className='arr';ar.innerHTML=ic('swords');ar.style.margin='0 6px';
+  const right=column();right.appendChild(mk(3,true));right.appendChild(mk(6));
+  d3.append(left,ar,right);
 }
+
+/* ================= 事件绑定 ================= */
+document.querySelectorAll('.rpsbtn').forEach(b=>
+  b.addEventListener('click',()=>rpsPick(b.dataset.c)));
+document.addEventListener('keydown',e=>{
+  if(phase==='placing'&&!busy&&['1','2','3'].includes(e.key)){
+    e.preventDefault();
+    onColClick(+e.key-1);
+  }
+});
+$('#btnTut').addEventListener('click',()=>{snd('click');$('#tutOv').classList.add('show');});
+$('#btnTut2').addEventListener('click',()=>{snd('click');$('#startOv').classList.remove('show');
+  $('#tutOv').classList.add('show');});
+$('#btnTutOk').addEventListener('click',()=>{snd('click');$('#tutOv').classList.remove('show');
+  if(phase==='menu')openStart();});
+$('#btnStart').addEventListener('click',()=>{snd('click');startGame();});
+$('#btnOnlineOpen').addEventListener('click',()=>{snd('click');openOnlineModal();});
+$('#btnCreateRoom').addEventListener('click',()=>{snd('click');createRoom();});
+$('#btnJoinRoom').addEventListener('click',()=>{snd('click');joinRoom($('#inputRoomId').value);});
+$('#btnCopyLink').addEventListener('click',()=>{snd('click');copyInviteLink();});
+$('#btnOnlineCancel').addEventListener('click',()=>{
+  snd('click');
+  if(peer&&!peer.destroyed)peer.destroy();
+  $('#onlineOv').classList.remove('show');
+  history.replaceState(null,'',location.pathname);
+  openStart();
+});
+
+$('#btnAgain').addEventListener('click',()=>{
+  snd('click');
+  if(!isOnline){
+    if(coins<bet){$('#endOv').classList.remove('show');openStart();return;}
+    startGame();
+  }else{
+    rematchPending=true;
+    sendNet({type:'rematch'});
+    $('#endSub').innerHTML='已发起再战邀请，等待对方接受…';
+    $('#btnAgain').disabled=true;
+  }
+});
+$('#btnBack').addEventListener('click',()=>{
+  snd('click');
+  $('#endOv').classList.remove('show');
+  if(isOnline){
+    if(conn)conn.close();
+    if(peer&&!peer.destroyed)peer.destroy();
+    setOpponentUI(false);
+    history.replaceState(null,'',location.pathname);
+  }
+  phase='menu';openStart();
+});
+$('#btnAlms').addEventListener('click',()=>{coins+=10;saveCoins();snd('coin');
+  $('#coinNum').textContent=coins;quip('别赌太凶哦。',1800);openStart();});
+const mb=$('#btnMute');
+function syncMute(){$('#muteIc').innerHTML=ic(muted?'volume-x':'volume-2');}
+mb.addEventListener('click',()=>{muted=!muted;localStorage.setItem('kb_mute',muted?'1':'0');
+  syncMute();if(!muted)snd('click');});
+syncMute();
+
+function fit(){
+  const st=$('#stage');
+  st.style.zoom=1;                              // 先还原，再量原始尺寸（跨引擎幂等）
+  const w=st.offsetWidth||480, h=st.offsetHeight||880;
+  const s=Math.min(1,(innerWidth-20)/w,(innerHeight-20)/h);
+  st.style.zoom=s;                              // zoom 同步收缩布局，无幻影溢出
+}
+addEventListener('resize',fit);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
+setTimeout(fit,400);setTimeout(fit,1200); // 字体加载后高度可能微变
+
+/* ================= 启动 ================= */
+document.querySelectorAll('[data-ic]').forEach(el=>el.innerHTML=ic(el.dataset.ic));
+buildBoards();buildDemos();updateScores(false);fit();
+$('#coinNum').textContent=coins;
+
+// 自动检测邀请链接
+const hash=location.hash.replace('#','').trim().toUpperCase();
+if(hash&&hash.length>=3){
+  $('#tutOv').classList.remove('show');
+  openOnlineModal();
+  $('#inputRoomId').value=hash;
+  joinRoom(hash);
+}else if(!localStorage.getItem('kb_tut')){
+  $('#tutOv').classList.add('show');
+  localStorage.setItem('kb_tut','1');
+}else openStart();
 </script>
 </body>
 </html>
