@@ -56,7 +56,10 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
   padding:3px 10px;border-radius:10px;opacity:0;transform:translateY(4px);transition:.2s;pointer-events:none}
 .nameplate .quip.show{opacity:1;transform:none}
 .nameplate .bigholder{margin-left:auto}
-.avatar{width:26px;height:26px;flex:none}
+.avatar{width:28px;height:28px;flex:none;display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
+#avatarYou{background:var(--t4);color:#fff}
+#avatarRat{background:var(--btn);color:#fff}
+.avatar .ic{width:16px;height:16px;stroke-width:2.2}
 
 /* ---------- 棋盘 ---------- */
 .board{display:grid;grid-template-columns:repeat(3,var(--colw));gap:10px;justify-content:center;
@@ -207,7 +210,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
       <div class="subtitle">KNUCKLEBONES · 联机版 v1.2.2</div>
     </div>
     <div class="scores">
-      <div class="scorebox"><label id="ratLabel">拉陶</label><b id="ratTotal">0</b></div>
+      <div class="scorebox"><label id="ratLabel">旅人</label><b id="ratTotal">0</b></div>
       <div class="scorebox"><label>你</label><b id="youTotal">0</b></div>
     </div>
   </header>
@@ -220,16 +223,10 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
     </span>
   </div>
 
-  <!-- 对手（拉陶/在线玩家） -->
+  <!-- 对手（旅人/在线玩家） -->
   <div class="nameplate" id="plateRat">
-    <span class="avatar" id="avatarRat">
-      <svg viewBox="0 0 100 100"><circle cx="24" cy="30" r="14" fill="#a58a70"/><circle cx="76" cy="30" r="14" fill="#a58a70"/>
-      <circle cx="24" cy="30" r="7" fill="#e8b8b2"/><circle cx="76" cy="30" r="7" fill="#e8b8b2"/>
-      <ellipse cx="50" cy="58" rx="33" ry="30" fill="#b99a7d"/><ellipse cx="50" cy="73" rx="16" ry="11" fill="#d9c3a6"/>
-      <ellipse cx="50" cy="74" rx="6" ry="4.5" fill="#e37b7b"/>
-      <circle cx="37" cy="53" r="4.5" fill="#3a2c20"/><circle cx="63" cy="53" r="4.5" fill="#3a2c20"/></svg>
-    </span>
-    <span id="nameRat">拉陶</span>
+    <span class="avatar" id="avatarRat"><span class="ici" data-ic="compass"></span></span>
+    <span id="nameRat">旅人</span>
     <span class="quip" id="quip"></span>
     <div class="bigholder" id="ratDie"></div>
   </div>
@@ -248,15 +245,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
   </div>
 
   <div class="nameplate" id="plateYou" style="justify-content:flex-start">
-    <span class="avatar">
-      <svg viewBox="0 0 100 100">
-      <path d="M34 22 L38 8 L46 18 L50 6 L54 18 L62 8 L66 22 Q73 27 71 36 Q69 45 50 47 Q31 45 29 36 Q27 27 34 22 Z" fill="#e05252"/>
-      <circle cx="29" cy="39" r="12" fill="#f6f1e6"/><circle cx="50" cy="35" r="13" fill="#f6f1e6"/>
-      <circle cx="71" cy="39" r="12" fill="#f6f1e6"/><circle cx="37" cy="29" r="11" fill="#f6f1e6"/><circle cx="63" cy="29" r="11" fill="#f6f1e6"/>
-      <ellipse cx="50" cy="53" rx="18" ry="15" fill="#4a4a52"/>
-      <ellipse cx="42.5" cy="50" rx="5" ry="6.5" fill="#fff"/><ellipse cx="57.5" cy="50" rx="5" ry="6.5" fill="#fff"/>
-      <circle cx="44" cy="51" r="2.6" fill="#16161c"/><circle cx="56" cy="51" r="2.6" fill="#16161c"/></svg>
-    </span>
+    <span class="avatar" id="avatarYou"><span class="ici" data-ic="user"></span></span>
     你
   </div>
 
@@ -271,7 +260,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
     <div class="rpsHands">
       <div class="rpsSide"><div class="rpsHand shake" id="rpsYou"><span class="ici" data-ic="circle-help"></span></div><label>你</label></div>
       <div class="rpsVS">VS</div>
-      <div class="rpsSide"><div class="rpsHand shake" id="rpsRat"><span class="ici" data-ic="circle-help"></span></div><label id="rpsRatLabel">拉陶</label></div>
+      <div class="rpsSide"><div class="rpsHand shake" id="rpsRat"><span class="ici" data-ic="circle-help"></span></div><label id="rpsRatLabel">旅人</label></div>
     </div>
     <div class="rpsBtns">
       <button class="bigbtn rpsbtn" data-c="rock"><span class="ici" data-ic="hand-fist"></span>石头</button>
@@ -285,16 +274,16 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
 <div class="overlay" id="startOv">
   <div class="card">
     <h2>距骨骰</h2>
-    <div class="sub" id="startSub">拉陶眯起眼睛：「想赌一把吗，小羊？」</div>
+    <div class="sub" id="startSub">旅人整理着骰子：「想切磋一把吗，朋友？」</div>
     <div class="startline" style="font-size:15px;font-weight:700;color:var(--text-l)">选择下注筹码（你有 <b id="stCoins" style="color:var(--text)">30</b> <span class="ici" data-ic="coins"></span>）</div>
     <div class="betchips" id="chips"></div>
     <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button class="bigbtn" id="btnStart"><span class="ici" data-ic="swords"></span>与拉陶对局</button>
+      <button class="bigbtn" id="btnStart"><span class="ici" data-ic="swords"></span>与旅人对局</button>
       <button class="bigbtn ghostbtn" id="btnOnlineOpen" style="background:var(--t5);color:#fff"><span class="ici" data-ic="swords"></span>双人在线对战</button>
     </div>
     <div class="alms" id="almsBox" style="display:none">
       钱袋空空如也……<br>
-      <button class="bigbtn ghostbtn" id="btnAlms">接受拉陶的施舍（+10 <span class="ici" data-ic="coins"></span>）</button>
+      <button class="bigbtn ghostbtn" id="btnAlms">接受旅人的资助（+10 <span class="ici" data-ic="coins"></span>）</button>
     </div>
     <div style="margin-top:14px">
       <button class="bigbtn ghostbtn" id="btnTut2" style="font-size:15px;padding:9px 24px"><span class="ici" data-ic="book-open"></span>玩法说明</button>
@@ -400,6 +389,8 @@ const IC={
   'hand-fist':'<path d="M12.035 17.012a3 3 0 0 0-3-3l-.311-.002a.72.72 0 0 1-.505-1.229l1.195-1.195A2 2 0 0 1 10.828 11H12a2 2 0 0 0 0-4H9.243a3 3 0 0 0-2.122.879l-2.707 2.707A4.83 4.83 0 0 0 3 14a8 8 0 0 0 8 8h2a8 8 0 0 0 8-8V7a2 2 0 1 0-4 0v2a2 2 0 1 0 4 0"/><path d="M13.888 9.662A2 2 0 0 0 17 8V5A2 2 0 1 0 13 5"/><path d="M9 5A2 2 0 1 0 5 5V10"/><path d="M9 7V4A2 2 0 1 1 13 4V7.268"/>',
   'circle-help':'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
   'arrow-right':'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+  user:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  compass:'<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
 };
 const ic=n=>'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[n]+'</svg>';
 
@@ -567,7 +558,7 @@ function onColHover(c){
     slotEls.rat[c].forEach(sl=>{const d=sl.querySelector('.die');
       if(d&&+d.dataset.v===die)d.classList.add('doomed');});
     const t2=document.createElement('div');t2.className='tag knock';
-    const oppName=isOnline?'对手':'拉陶';
+    const oppName=isOnline?'对手':'旅人';
     t2.innerHTML=`${ic('swords')} 顶掉${oppName}的 ${doomed>1?doomed+' 颗 ':''}<b>${die}</b>！`;
     col.appendChild(t2);
   }
@@ -681,7 +672,7 @@ function onColClick(c){
   updateScores();
   if(isOnline)sendNet({type:'place',col:c,die:v});
 
-  const oppName=isOnline?'对手':'拉陶';
+  const oppName=isOnline?'对手':'旅人';
   if(removed.length){
     hint(`你放下 <b>${v}</b>，顶掉了${oppName}的 ${removed.length} 颗 ${v}！`);
     if(!isOnline&&removed.length>=2)quip('哎呀，我的骰子！');
@@ -743,11 +734,11 @@ function handleOpponentPlace(c,v){
 
 async function ratTurn(){
   phase='rat';setActive('rat');
-  hint('拉陶搓了搓骰子……');
+  hint('旅人搓了搓骰子……');
   await wait(480);
   const v=await rollAnim('rat');
   if(v===6&&Math.random()<.35)quip('嘿咻，好点数！');
-  hint(`拉陶掷出了 <b>${v}</b>`);
+  hint(`旅人掷出了 <b>${v}</b>`);
   await wait(620);
   const c=aiChoose(v);
   $('#ratDie').innerHTML='';
@@ -755,15 +746,15 @@ async function ratTurn(){
   animatePlace('rat',c,boards.rat[c].length-1,v);snd('place');
   updateScores();
   if(removed.length){
-    hint(`拉陶放下 <b>${v}</b>，顶掉了你的 ${removed.length} 颗 ${v}！`);
-    quip('嘿嘿，抱歉啦。');
+    hint(`旅人放下 <b>${v}</b>，顶掉了你的 ${removed.length} 颗 ${v}！`);
+    quip('承让，承让。');
     setTimeout(()=>{
       snd('knock');
       removed.forEach((si,k)=>flyDie('you',c,si,k));
       setTimeout(()=>{renderCol('you',c);updateScores();afterMove('rat');},560);
     },300);
   }else{
-    hint(`拉陶把 <b>${v}</b> 放进了他的第 ${c+1} 列`);
+    hint(`旅人把 <b>${v}</b> 放进了第 ${c+1} 列`);
     setTimeout(()=>afterMove('rat'),430);
   }
 }
@@ -804,7 +795,7 @@ async function rpsPick(mine){
     const youWin=BEATS[mine]===ratPick;
     $('#rpsMsg').innerHTML=youWin
       ?`${ic('party-popper')} 你赢了——<b>你先手！</b>`
-      :`${ic('skull')} 拉陶赢了——他先手`;
+      :`${ic('skull')} 旅人赢了——对方先手`;
     snd(youWin?'coin':'knock');
     await wait(1100);
     $('#rpsOv').classList.remove('show');
@@ -861,9 +852,9 @@ function decideFirst(){
 
 function setOpponentUI(online){
   isOnline=online;
-  $('#ratLabel').textContent=online?'对手':'拉陶';
-  $('#nameRat').textContent=online?'对手 (好友)':'拉陶';
-  $('#rpsRatLabel').textContent=online?'对手':'拉陶';
+  $('#ratLabel').textContent=online?'对手':'旅人';
+  $('#nameRat').textContent=online?'对手 (好友)':'旅人';
+  $('#rpsRatLabel').textContent=online?'对手':'旅人';
 }
 
 async function startGame(){
@@ -908,10 +899,10 @@ function endGame(){
     if(Y>R){
       title='你赢了！';sfx='win';
       coins+=bet*2;saveCoins();
-      sub=`拉陶掏出钱包，赌注翻倍奉还：<b>+${bet*2} ${ic('coins')}</b>（净赚 ${bet}）`;
+      sub=`旅人愿赌服输，赌注翻倍奉还：<b>+${bet*2} ${ic('coins')}</b>（净赚 ${bet}）`;
     }else if(Y<R){
       title='你输了……';sfx='lose';
-      sub=`那 ${bet} 枚筹码归拉陶了<br>「再试一次？我手气正好。」——拉陶`;
+      sub=`那 ${bet} 枚筹码归旅人了<br>「再试一次？我手气正好。」——旅人`;
     }else{
       title='平局！';sfx='click';
       coins+=bet;saveCoins();
@@ -1218,7 +1209,7 @@ $('#btnBack').addEventListener('click',()=>{
   phase='menu';openStart();
 });
 $('#btnAlms').addEventListener('click',()=>{coins+=10;saveCoins();snd('coin');
-  $('#coinNum').textContent=coins;quip('别赌太凶哦。',1800);openStart();});
+  $('#coinNum').textContent=coins;quip('别灰心，重整旗鼓吧。',1800);openStart();});
 const mb=$('#btnMute');
 function syncMute(){$('#muteIc').innerHTML=ic(muted?'volume-x':'volume-2');}
 mb.addEventListener('click',()=>{muted=!muted;localStorage.setItem('kb_mute',muted?'1':'0');
