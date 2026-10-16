@@ -64,9 +64,19 @@ const t = (name, ok, extra = '') => {
   const roomCode = await pageHost.locator('#roomCodeDisplay').textContent();
   t('房主成功生成房间代码', !!roomCode && roomCode.length >= 4, `Room: ${roomCode}`);
 
-  // 4. Guest 通过分享链接进入 (#roomCode)
+  // 4. Guest 通过分享链接进入 (#roomCode) —— 验证 Bug 2：新用户点链接会弹出玩法说明
   console.log(`Guest 正在通过链接加入房间 ${roomCode}...`);
-  await pageGuest.goto(`http://127.0.0.1:${PORT}/index.html#${roomCode}`);
+  await pageGuest.goto(`http://127.0.0.1:${PORT}/index.html#${roomCode}`, { waitUntil: 'load' });
+  await sleep(600);
+
+  // 验证 Guest 首次通过链接访问弹出了玩法说明！
+  t('Guest 通过链接进入成功弹出玩法说明', await pageGuest.locator('#tutOv.show').count() === 1);
+  const tutBtnText = await pageGuest.locator('#btnTutOk').textContent();
+  t('玩法说明按钮提示加入对战', tutBtnText.includes('加入对战'));
+
+  // Guest 点击“明白啦，加入对战！”
+  await pageGuest.click('#btnTutOk');
+  await sleep(300);
 
   // 等待双方成功连接并进入猜拳定先手界面
   console.log('等待双方 P2P WebRTC 通道打通...');
@@ -91,8 +101,8 @@ const t = (name, ok, extra = '') => {
   await sleep(2200);
   t('猜拳弹窗已自动关闭，进入棋局', await pageHost.locator('#rpsOv.show').count() === 0);
 
-  // 6. 验证 Host 是先手（Host 处于 idle/rolling/placing，Guest 处于等待）
-  await sleep(1500); // 等待自动掷骰动画完成
+  // 6. 验证 Host 是先手
+  await sleep(1500);
   const hostHint = await pageHost.locator('#hintbar').innerText();
   t('Host 先手并自动完成掷骰', hostHint.includes('掷出') || hostHint.includes('放置'), hostHint);
 
@@ -101,14 +111,44 @@ const t = (name, ok, extra = '') => {
   await pageHost.click('#boardYou .col:first-child');
   await sleep(1000);
 
-  // 8. 验证 Guest 界面上方对手棋盘（第 1 列）出现骰子
   const guestBoardTopDiceCount = await pageGuest.locator('#boardRat .col:first-child .die').count();
   t('Guest 界面上方棋盘实时同步了 Host 的落子', guestBoardTopDiceCount === 1);
 
+  // 8. 验证 Bug 1 修复：第一局结束触发结算，测试“再来一局”
+  console.log('模拟第一局打完，进入结算界面测试再来一局...');
+  await pageHost.evaluate(() => endGame());
+  await pageGuest.evaluate(() => endGame());
+  await sleep(1500);
+
+  t('双端均已进入结算界面', 
+    await pageHost.locator('#endOv.show').count() === 1 && 
+    await pageGuest.locator('#endOv.show').count() === 1
+  );
+
+  // Host 点击“再来一局”
+  console.log('Host 发起再战请求...');
+  await pageHost.click('#btnAgain');
+  await sleep(500);
+
+  // 检查 Guest 端的提示和按钮变化
+  const guestAgainBtnText = await pageGuest.locator('#btnAgain').textContent();
+  t('Guest 端收到再战邀请，按钮变为接受挑战', guestAgainBtnText.includes('接受挑战'));
+
+  // Guest 点击“接受挑战，再来一局！”
+  console.log('Guest 点击接受挑战...');
+  await pageGuest.click('#btnAgain');
+  await sleep(1500);
+
+  // 核心断言：验证双方两端（尤其是 Guest 端）都关掉了结算界面，且都弹出了猜拳窗口！
+  const hostRpsShow = await pageHost.locator('#rpsOv.show').count() === 1;
+  const guestRpsShow = await pageGuest.locator('#rpsOv.show').count() === 1;
+  t('Host 端已成功重新进入猜拳定先手', hostRpsShow);
+  t('Guest 端已成功弹出猜拳按钮/定先手界面', guestRpsShow);
+
   // 截图留存
-  await pageHost.screenshot({ path: '/tmp/kb-host-online.png' });
-  await pageGuest.screenshot({ path: '/tmp/kb-guest-online.png' });
-  console.log('已保存 Host 和 Guest 运行截图到 /tmp/kb-*.png');
+  await pageHost.screenshot({ path: '/tmp/kb-host-rematch.png' });
+  await pageGuest.screenshot({ path: '/tmp/kb-guest-rematch.png' });
+  console.log('已保存再战测试截图到 /tmp/kb-*-rematch.png');
 
   console.log(`\n测试完成: ${pass} 项通过, ${fail} 项失败`);
   await browser.close();

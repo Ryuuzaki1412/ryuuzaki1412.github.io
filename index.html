@@ -325,7 +325,8 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
       </div>
     </div>
 
-    <div style="margin-top:16px">
+    <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
+      <button class="bigbtn ghostbtn" id="btnOnlineTut" style="font-size:14px;padding:8px 18px"><span class="ici" data-ic="book-open"></span>玩法说明</button>
       <button class="bigbtn ghostbtn" id="btnOnlineCancel" style="font-size:14px;padding:8px 22px">返回单机</button>
     </div>
   </div>
@@ -469,7 +470,9 @@ let conn=null;
 let myRps=null;
 let oppRps=null;
 let currentRoom=null;
-let rematchPending=false;
+let myRematch=false;
+let oppRematch=false;
+let pendingJoinRoom=null;
 
 /* ================= DOM 引用 ================= */
 const colEls={you:[],rat:[]},slotEls={you:[],rat:[]};
@@ -617,6 +620,9 @@ function handleNetMessage(msg){
       break;
     case 'rematch':
       handleOpponentRematch();
+      break;
+    case 'rematch_start':
+      startOnlineGame();
       break;
   }
 }
@@ -865,7 +871,7 @@ async function startGame(){
 }
 
 async function startOnlineGame(){
-  rematchPending=false;
+  myRematch=false;oppRematch=false;
   setOpponentUI(true);
   boards={you:[[],[],[]],rat:[[],[],[]]};die=null;busy=false;
   clearBoardDom();clearPreview();markClear();
@@ -913,7 +919,11 @@ function endGame(){
     $('#endTitle').innerHTML=title;
     $('#endSub').innerHTML=sub;
     $('#coinNum').textContent=coins;
-    $('#btnAgain').disabled=false;
+    myRematch=false;oppRematch=false;
+    const b=$('#btnAgain');
+    b.disabled=false;
+    b.classList.remove('sel');
+    b.textContent='再来一局';
     $('#endOv').classList.add('show');
     if(!isOnline){
       if(Y>R)quip('下次我会赢回来的！');
@@ -923,11 +933,17 @@ function endGame(){
 }
 
 function handleOpponentRematch(){
-  if(rematchPending){
+  oppRematch=true;
+  if(myRematch){
+    sendNet({type:'rematch_start'});
     startOnlineGame();
   }else{
-    quip('对手发起了再战！',3000);
-    $('#endSub').innerHTML+='<br><b style="color:var(--t5)">对手已准备好再战！点击“再来一局”开赛</b>';
+    quip('对手向你发起了再战！',3000);
+    $('#endSub').innerHTML+='<br><b style="color:var(--t5)">对手已准备好再战！点击下方接受挑战</b>';
+    const b=$('#btnAgain');
+    b.disabled=false;
+    b.classList.add('sel');
+    b.textContent='接受挑战，再来一局！';
   }
 }
 
@@ -1115,11 +1131,21 @@ document.addEventListener('keydown',e=>{
     onColClick(+e.key-1);
   }
 });
-$('#btnTut').addEventListener('click',()=>{snd('click');$('#tutOv').classList.add('show');});
-$('#btnTut2').addEventListener('click',()=>{snd('click');$('#startOv').classList.remove('show');
+$('#btnTut').addEventListener('click',()=>{snd('click');$('#btnTutOk').textContent='明白啦！';$('#tutOv').classList.add('show');});
+$('#btnTut2').addEventListener('click',()=>{snd('click');$('#btnTutOk').textContent='明白啦！';$('#startOv').classList.remove('show');
   $('#tutOv').classList.add('show');});
+$('#btnOnlineTut').addEventListener('click',()=>{snd('click');$('#btnTutOk').textContent='明白啦！';$('#tutOv').classList.add('show');});
 $('#btnTutOk').addEventListener('click',()=>{snd('click');$('#tutOv').classList.remove('show');
-  if(phase==='menu')openStart();});
+  localStorage.setItem('kb_tut','1');
+  if(pendingJoinRoom){
+    const r=pendingJoinRoom;pendingJoinRoom=null;
+    openOnlineModal();
+    $('#inputRoomId').value=r;
+    joinRoom(r);
+  }else if(phase==='menu'){
+    openStart();
+  }
+});
 $('#btnStart').addEventListener('click',()=>{snd('click');startGame();});
 $('#btnOnlineOpen').addEventListener('click',()=>{snd('click');openOnlineModal();});
 $('#btnCreateRoom').addEventListener('click',()=>{snd('click');createRoom();});
@@ -1139,10 +1165,18 @@ $('#btnAgain').addEventListener('click',()=>{
     if(coins<bet){$('#endOv').classList.remove('show');openStart();return;}
     startGame();
   }else{
-    rematchPending=true;
+    myRematch=true;
     sendNet({type:'rematch'});
-    $('#endSub').innerHTML='已发起再战邀请，等待对方接受…';
-    $('#btnAgain').disabled=true;
+    if(oppRematch){
+      sendNet({type:'rematch_start'});
+      startOnlineGame();
+    }else{
+      $('#endSub').innerHTML='已发起再战邀请，等待对方接受…';
+      const b=$('#btnAgain');
+      b.disabled=true;
+      b.classList.remove('sel');
+      b.textContent='已准备 (等待对手)';
+    }
   }
 });
 $('#btnBack').addEventListener('click',()=>{
@@ -1183,14 +1217,21 @@ $('#coinNum').textContent=coins;
 // 自动检测邀请链接
 const hash=location.hash.replace('#','').trim().toUpperCase();
 if(hash&&hash.length>=3){
-  $('#tutOv').classList.remove('show');
-  openOnlineModal();
-  $('#inputRoomId').value=hash;
-  joinRoom(hash);
+  if(!localStorage.getItem('kb_tut')){
+    pendingJoinRoom=hash;
+    $('#btnTutOk').textContent='明白啦，加入对战！';
+    $('#tutOv').classList.add('show');
+  }else{
+    openOnlineModal();
+    $('#inputRoomId').value=hash;
+    joinRoom(hash);
+  }
 }else if(!localStorage.getItem('kb_tut')){
+  $('#btnTutOk').textContent='明白啦！';
   $('#tutOv').classList.add('show');
-  localStorage.setItem('kb_tut','1');
-}else openStart();
+}else{
+  openStart();
+}
 </script>
 </body>
 </html>
