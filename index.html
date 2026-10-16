@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>距骨骰 · Knucklebones</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%23f2b179'/%3E%3Ccircle cx='28' cy='28' r='10' fill='%23fff'/%3E%3Ccircle cx='72' cy='50' r='10' fill='%23fff'/%3E%3Ccircle cx='28' cy='72' r='10' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -201,7 +204,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
   <header>
     <div class="titles">
       <h1>距骨骰</h1>
-      <div class="subtitle">KNUCKLEBONES · 同列相乘 · 对位互顶</div>
+      <div class="subtitle">KNUCKLEBONES · 联机版 v1.2.2</div>
     </div>
     <div class="scores">
       <div class="scorebox"><label id="ratLabel">拉陶</label><b id="ratTotal">0</b></div>
@@ -473,6 +476,7 @@ let currentRoom=null;
 let myRematch=false;
 let oppRematch=false;
 let pendingJoinRoom=null;
+let endTimer=null;
 
 /* ================= DOM 引用 ================= */
 const colEls={you:[],rat:[]},slotEls={you:[],rat:[]};
@@ -610,6 +614,9 @@ function handleNetMessage(msg){
   switch(msg.type){
     case 'rps':
       oppRps=msg.choice;
+      if(phase==='over'||$('#endOv').classList.contains('show')){
+        startOnlineGame();
+      }
       checkRpsReveal();
       break;
     case 'roll':
@@ -845,6 +852,9 @@ function decideFirst(){
   return new Promise(res=>{
     rpsResolve=res;
     resetRpsUi();
+    if(isOnline&&oppRps){
+      $('#rpsMsg').textContent='对手已出招——请你也出招！';
+    }
     $('#rpsOv').classList.add('show');
   });
 }
@@ -857,6 +867,7 @@ function setOpponentUI(online){
 }
 
 async function startGame(){
+  if(endTimer){clearTimeout(endTimer);endTimer=null;}
   setOpponentUI(false);
   if(coins<bet){openStart();return;}
   coins-=bet;saveCoins();$('#coinNum').textContent=coins;
@@ -871,7 +882,11 @@ async function startGame(){
 }
 
 async function startOnlineGame(){
+  if(endTimer){clearTimeout(endTimer);endTimer=null;}
+  if(phase==='rps')return;
+  phase='rps';
   myRematch=false;oppRematch=false;
+  myRps=null;
   setOpponentUI(true);
   boards={you:[[],[],[]],rat:[[],[],[]]};die=null;busy=false;
   clearBoardDom();clearPreview();markClear();
@@ -885,6 +900,7 @@ async function startOnlineGame(){
 
 function endGame(){
   phase='over';setActive(null);markClear();
+  if(endTimer){clearTimeout(endTimer);endTimer=null;}
   const Y=total(boards.you),R=total(boards.rat);
   let title,sub,sfx;
 
@@ -914,16 +930,23 @@ function endGame(){
     }
   }
 
-  setTimeout(()=>{
+  endTimer=setTimeout(()=>{
+    endTimer=null;
     snd(sfx);if(Y>R)setTimeout(()=>snd('coin'),650);
     $('#endTitle').innerHTML=title;
     $('#endSub').innerHTML=sub;
     $('#coinNum').textContent=coins;
-    myRematch=false;oppRematch=false;
+    myRematch=false;
     const b=$('#btnAgain');
     b.disabled=false;
-    b.classList.remove('sel');
-    b.textContent='再来一局';
+    if(oppRematch){
+      $('#endSub').innerHTML+='<br><b style="color:var(--t5)">对手已准备好再战！点击下方接受挑战</b>';
+      b.classList.add('sel');
+      b.textContent='接受挑战，再来一局！';
+    }else{
+      b.classList.remove('sel');
+      b.textContent='再来一局';
+    }
     $('#endOv').classList.add('show');
     if(!isOnline){
       if(Y>R)quip('下次我会赢回来的！');
@@ -939,11 +962,15 @@ function handleOpponentRematch(){
     startOnlineGame();
   }else{
     quip('对手向你发起了再战！',3000);
-    $('#endSub').innerHTML+='<br><b style="color:var(--t5)">对手已准备好再战！点击下方接受挑战</b>';
     const b=$('#btnAgain');
     b.disabled=false;
     b.classList.add('sel');
     b.textContent='接受挑战，再来一局！';
+    if($('#endOv').classList.contains('show')){
+      if(!$('#endSub').innerHTML.includes('对手已准备好再战')){
+        $('#endSub').innerHTML+='<br><b style="color:var(--t5)">对手已准备好再战！点击下方接受挑战</b>';
+      }
+    }
   }
 }
 
@@ -1136,7 +1163,7 @@ $('#btnTut2').addEventListener('click',()=>{snd('click');$('#btnTutOk').textCont
   $('#tutOv').classList.add('show');});
 $('#btnOnlineTut').addEventListener('click',()=>{snd('click');$('#btnTutOk').textContent='明白啦！';$('#tutOv').classList.add('show');});
 $('#btnTutOk').addEventListener('click',()=>{snd('click');$('#tutOv').classList.remove('show');
-  localStorage.setItem('kb_tut','1');
+  localStorage.setItem('kb_tut_v2','1');
   if(pendingJoinRoom){
     const r=pendingJoinRoom;pendingJoinRoom=null;
     openOnlineModal();
@@ -1217,7 +1244,7 @@ $('#coinNum').textContent=coins;
 // 自动检测邀请链接
 const hash=location.hash.replace('#','').trim().toUpperCase();
 if(hash&&hash.length>=3){
-  if(!localStorage.getItem('kb_tut')){
+  if(!localStorage.getItem('kb_tut_v2')){
     pendingJoinRoom=hash;
     $('#btnTutOk').textContent='明白啦，加入对战！';
     $('#tutOv').classList.add('show');
@@ -1226,7 +1253,7 @@ if(hash&&hash.length>=3){
     $('#inputRoomId').value=hash;
     joinRoom(hash);
   }
-}else if(!localStorage.getItem('kb_tut')){
+}else if(!localStorage.getItem('kb_tut_v2')){
   $('#btnTutOk').textContent='明白啦！';
   $('#tutOv').classList.add('show');
 }else{
