@@ -506,11 +506,9 @@ function updateScores(anim=true){
 function reBump(el){el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
 
 function renderCol(side,c){
-  slotEls[side][c].forEach(sl=>sl.querySelectorAll('.die:not(.fly)').forEach(d=>d.remove()));
+  slotEls[side][c].forEach(sl=>sl.innerHTML='');
   boards[side][c].forEach((v,i)=>{
-    const ex=slotEls[side][c][i].querySelector('.die');
-    if(!ex)slotEls[side][c][i].appendChild(makeDie(v));
-    else if(ex.dataset.v!=v)setFace(ex,v);
+    slotEls[side][c][i].appendChild(makeDie(v));
   });
 }
 function animatePlace(side,c,si,v){
