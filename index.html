@@ -72,7 +72,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
 .col.full{opacity:.5}
 
 /* ---------- 骰子（扁平色阶，同 2048 瓦片） ---------- */
-.die{position:absolute;inset:4px;border-radius:5px;transform:rotate(var(--tilt,0deg));
+.die{position:absolute;inset:4px;border-radius:5px;
   transition:none}
 .die[data-v="1"]{background:var(--t1)}
 .die[data-v="2"]{background:var(--t2)}
@@ -84,7 +84,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
 .die[data-v="3"] i,.die[data-v="4"] i,.die[data-v="5"] i,.die[data-v="6"] i{background:#f9f6f2}
 .die.pop{animation:pop .3s cubic-bezier(.2,1.5,.4,1)}
 @keyframes pop{0%{transform:translateY(-18px) scale(.5);opacity:0}
-  70%{transform:scale(1.08)}100%{transform:rotate(var(--tilt,0deg))}}
+  70%{transform:scale(1.08)}100%{transform:none}}
 .die.fly{animation:fly .5s ease-in forwards}
 @keyframes fly{to{transform:translate(var(--fx,60px),-90px) rotate(150deg) scale(.4);opacity:0}}
 .die.ghost{opacity:.35}
@@ -252,7 +252,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
   <header>
     <div class="titles">
       <h1>距骨骰</h1>
-      <div class="subtitle">KNUCKLEBONES · 联机版 v1.4.1</div>
+      <div class="subtitle">KNUCKLEBONES · 联机版 v1.4.2</div>
     </div>
     <div class="scores">
       <div class="scorebox"><label id="ratLabel">旅人</label><b id="ratTotal">0</b></div>
@@ -454,7 +454,6 @@ const ic=n=>'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColo
 
 function makeDie(v,cls=''){
   const d=document.createElement('div'); d.className='die '+cls;
-  d.style.setProperty('--tilt',(Math.random()*8-4).toFixed(1)+'deg');
   setFace(d,v); return d;
 }
 function setFace(d,v){
