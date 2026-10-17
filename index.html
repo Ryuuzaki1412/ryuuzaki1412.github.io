@@ -92,6 +92,20 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
 .die.doomed{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--t6);animation:doom .5s ease-in-out infinite alternate}
 @keyframes doom{to{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--t4)}}
 
+/* 局内战术提示 */
+.slot-guide{position:absolute;inset:4px;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;animation:guideFade .2s ease-out;border:2px dashed rgba(119,110,101,.4);background:rgba(250,248,239,.75);z-index:10}
+@keyframes guideFade{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+.slot-guide.knock{border-color:var(--t5);background:rgba(246,124,95,.15)}
+.slot-guide.knock .guide-badge{background:var(--t6);color:#fff}
+.slot-guide.combo{border-color:var(--t4);background:rgba(245,149,99,.15)}
+.slot-guide.combo .guide-badge{background:var(--t4);color:#fff}
+.slot-guide.normal .guide-badge{background:var(--cell);color:var(--text)}
+.guide-badge{font-size:11px;font-weight:800;padding:1px 6px;border-radius:3px;line-height:1.3}
+.guide-sub{font-size:10px;font-weight:700;color:var(--text);margin-top:2px}
+.slot-guide.best{border:2px solid var(--t4);box-shadow:0 0 0 2px rgba(245,149,99,.25),0 0 8px rgba(245,149,99,.4);background:rgba(242,177,121,.2)}
+.slot-guide.best::before{content:'★ 推荐';position:absolute;top:-8px;background:var(--t4);color:#fff;font-size:9px;font-weight:800;padding:0 4px;border-radius:3px;line-height:14px}
+
 /* 中央掷骰区 */
 .controls{display:flex;align-items:center;justify-content:center;gap:16px;height:76px;margin:2px 0}
 .bigholder{width:56px;height:56px;position:relative}
@@ -207,7 +221,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
   <header>
     <div class="titles">
       <h1>距骨骰</h1>
-      <div class="subtitle">KNUCKLEBONES · 联机版 v1.3.1</div>
+      <div class="subtitle">KNUCKLEBONES · 联机版 v1.4.0</div>
     </div>
     <div class="scores">
       <div class="scorebox"><label id="ratLabel">旅人</label><b id="ratTotal">0</b></div>
@@ -218,6 +232,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
   <div class="toolbar">
     <span class="coins"><span class="ici" data-ic="coins"></span><b id="coinNum">30</b></span>
     <span>
+      <button class="iconbtn" id="btnGuide" title="战术指导开关"><span class="ici" id="guideIc"></span></button>
       <button class="iconbtn" id="btnTut" title="玩法说明">?</button>
       <button class="iconbtn" id="btnMute" title="音效开关"><span class="ici" id="muteIc"></span></button>
     </span>
@@ -537,13 +552,83 @@ function quip(t,ms=2400){
   clearTimeout(quipTimer);quipTimer=setTimeout(()=>q.classList.remove('show'),ms);
 }
 
-/* ================= 预览 ================= */
+/* ================= 局内战术指导与预览 ================= */
+let guideEnabled=localStorage.getItem('kb_guide')!=='0';
+
+function clearGuide(){
+  document.querySelectorAll('.slot-guide').forEach(el=>el.remove());
+  document.querySelectorAll('#boardRat .die.doomed').forEach(d=>d.classList.remove('doomed'));
+}
+
+function updateGuide(){
+  clearGuide();
+  if(!guideEnabled||phase!=='placing'||!die)return;
+
+  const cands=[];
+  for(let c=0;c<3;c++){
+    if(boards.you[c].length>=3)continue;
+    const curY=colScore(boards.you[c]);
+    const nextY=colScore([...boards.you[c],die]);
+    const gain=nextY-curY;
+    const doomed=boards.rat[c].filter(x=>x===die).length;
+    const curR=colScore(boards.rat[c]);
+    const nextR=colScore(boards.rat[c].filter(x=>x!==die));
+    const oppLoss=curR-nextR;
+    const totalBenefit=gain+oppLoss*1.2;
+    const hasCombo=boards.you[c].includes(die);
+    cands.push({c,doomed,gain,oppLoss,totalBenefit,hasCombo});
+  }
+
+  if(!cands.length)return;
+
+  cands.sort((a,b)=>b.totalBenefit-a.totalBenefit);
+  const best=cands[0];
+
+  cands.forEach(cand=>{
+    const c=cand.c;
+    const si=boards.you[c].length;
+    const slot=slotEls.you[c][si];
+    if(!slot)return;
+
+    let type='normal',label=`+${cand.gain}`,subText='平稳';
+    if(cand.doomed>0){
+      type='knock';
+      label='顶掉';
+      subText=cand.doomed>1?`顶 ${cand.doomed}颗`:`顶掉 ${die}`;
+      slotEls.rat[c].forEach(sl=>{
+        const d=sl.querySelector('.die');
+        if(d&&+d.dataset.v===die)d.classList.add('doomed');
+      });
+    }else if(cand.hasCombo){
+      type='combo';
+      label='连乘';
+      subText=`+${cand.gain} 分`;
+    }
+
+    const isBest=cand===best;
+    const guideEl=document.createElement('div');
+    guideEl.className=`slot-guide ${type}${isBest?' best':''}`;
+    guideEl.innerHTML=`<div class="guide-badge">${label}</div><div class="guide-sub">${subText}</div>`;
+    slot.appendChild(guideEl);
+  });
+
+  if(best.doomed>0){
+    hint(ic('lightbulb')+` 掷出 <b>${die}</b> · 战术建议：放置在第 <b>${best.c+1}</b> 列可顶掉对方的 <b>${die}</b>！`);
+  }else if(best.hasCombo){
+    hint(ic('lightbulb')+` 掷出 <b>${die}</b> · 战术建议：放置在第 <b>${best.c+1}</b> 列同点连乘（<b>+${best.gain}</b> 分）！`);
+  }else{
+    hint(ic('lightbulb')+` 掷出 <b>${die}</b> · 战术建议：放置在第 <b>${best.c+1}</b> 列稳健得分（<b>+${best.gain}</b> 分）`);
+  }
+}
+
 function onColHover(c){
   if(phase!=='placing'||busy)return;
   if(boards.you[c].length>=3)return;
   const col=colEls.you[c];
   // 幽灵骰子
   const si=boards.you[c].length;
+  const sg=slotEls.you[c][si].querySelector('.slot-guide');
+  if(sg)sg.style.display='none';
   const g=makeDie(die,'ghost');slotEls.you[c][si].appendChild(g);
   // 分数标签
   const cur=colScore(boards.you[c]),nx=colScore([...boards.you[c],die]);
@@ -564,7 +649,10 @@ function onColHover(c){
 function clearPreview(){
   document.querySelectorAll('.die.ghost').forEach(d=>d.remove());
   document.querySelectorAll('.tag').forEach(t=>t.remove());
-  document.querySelectorAll('.die.doomed').forEach(d=>d.classList.remove('doomed'));
+  document.querySelectorAll('.slot-guide').forEach(sg=>sg.style.display='');
+  if(!guideEnabled||phase!=='placing'){
+    document.querySelectorAll('#boardRat .die.doomed').forEach(d=>d.classList.remove('doomed'));
+  }
 }
 
 /* ================= 规则核心 ================= */
@@ -647,7 +735,11 @@ async function playerRoll(){ // 你的回合自动掷骰（放置由你决定）
   if(isOnline)sendNet({type:'roll',die});
   phase='placing';busy=false;
   markPickable();
-  hint(`掷出 <b>${die}</b>——点击一列放置（可按 1 / 2 / 3 键，悬停可预览分数）`);
+  if(guideEnabled){
+    updateGuide();
+  }else{
+    hint(`掷出 <b>${die}</b>——点击一列放置（可按 1 / 2 / 3 键，悬停可预览分数）`);
+  }
 }
 
 function markPickable(){
@@ -662,6 +754,7 @@ function onColClick(c){
   if(phase!=='placing'||busy)return;
   if(boards.you[c].length>=3){hint('这一列已经满了，换一列吧！');return;}
   busy=true;phase='wait';
+  clearGuide();
   const v=die;die=null;
   clearPreview();markClear();
   $('#youDie').innerHTML='';
@@ -684,7 +777,10 @@ function onColClick(c){
     setTimeout(()=>afterMove('you'),430);
   }
 }
-function markClear(){colEls.you.forEach(col=>col.classList.remove('pickable','full'));}
+function markClear(){
+  colEls.you.forEach(col=>col.classList.remove('pickable','full'));
+  clearGuide();
+}
 
 function afterMove(side){
   if(isFull(boards.you)||isFull(boards.rat)){endGame();return;}
@@ -1213,6 +1309,37 @@ function syncMute(){$('#muteIc').innerHTML=ic(muted?'volume-x':'volume-2');}
 mb.addEventListener('click',()=>{muted=!muted;localStorage.setItem('kb_mute',muted?'1':'0');
   syncMute();if(!muted)snd('click');});
 syncMute();
+
+const gb=$('#btnGuide');
+function syncGuideBtn(){
+  gb.classList.toggle('active',guideEnabled);
+  gb.title=guideEnabled?'战术指导：已开启（点击关闭）':'战术指导：已关闭（点击开启）';
+  $('#guideIc').innerHTML=ic('lightbulb');
+  if(guideEnabled){
+    gb.style.background='var(--t4)';
+    gb.style.color='#fff';
+    gb.style.opacity='1';
+  }else{
+    gb.style.background='var(--btn)';
+    gb.style.color='#eee4da';
+    gb.style.opacity='0.6';
+  }
+}
+gb.addEventListener('click',()=>{
+  guideEnabled=!guideEnabled;
+  localStorage.setItem('kb_guide',guideEnabled?'1':'0');
+  syncGuideBtn();
+  snd('click');
+  if(guideEnabled&&phase==='placing'&&die){
+    updateGuide();
+  }else{
+    clearGuide();
+    if(phase==='placing'&&die){
+      hint(`掷出 <b>${die}</b>——点击一列放置（可按 1 / 2 / 3 键，悬停可预览分数）`);
+    }
+  }
+});
+syncGuideBtn();
 
 function fit(){
   const st=$('#stage');
