@@ -106,6 +106,37 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
 .slot-guide.best{border:2px solid var(--t4);box-shadow:0 0 0 2px rgba(245,149,99,.25),0 0 8px rgba(245,149,99,.4);background:rgba(242,177,121,.2)}
 .slot-guide.best::before{content:'★ 推荐';position:absolute;top:-8px;background:var(--t4);color:#fff;font-size:9px;font-weight:800;padding:0 4px;border-radius:3px;line-height:14px}
 
+/* 战术指导首次引导气泡 */
+.guide-anchor{position:relative;display:inline-block;margin-left:8px;vertical-align:middle}
+.guide-anchor .iconbtn{margin-left:0}
+.guide-tip{position:absolute;top:42px;right:-50px;width:220px;background:#fff;
+  border:2px solid var(--t4);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.14);
+  padding:10px 12px;z-index:90;text-align:left;animation:tipPop .25s ease-out}
+@keyframes tipPop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.guide-tip .gt-arrow{position:absolute;top:-8px;right:60px;width:0;height:0;
+  border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:8px solid var(--t4)}
+.guide-tip .gt-arrow::after{content:'';position:absolute;top:2px;left:-6px;width:0;height:0;
+  border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:7px solid #fff}
+.guide-tip .gt-title{font-size:13px;font-weight:800;color:var(--t6);display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.guide-tip .gt-text{font-size:12px;font-weight:700;line-height:1.45;color:var(--text);margin-bottom:8px}
+.guide-tip .gt-btn{display:block;margin-left:auto;background:var(--btn);color:#fff;border:none;border-radius:4px;
+  padding:4px 12px;font-size:12px;font-weight:800;cursor:pointer;transition:background .12s}
+.guide-tip .gt-btn:hover{background:var(--btn-h)}
+
+.guide-pulse{animation:guidePulse 1.6s infinite}
+@keyframes guidePulse{
+  0%{box-shadow:0 0 0 0 rgba(246,94,59,.7)}
+  70%{box-shadow:0 0 0 8px rgba(246,94,59,0)}
+  100%{box-shadow:0 0 0 0 rgba(246,94,59,0)}
+}
+
+.tut-guide-note{background:var(--t1);border:1.5px dashed var(--t4);border-radius:6px;padding:9px 12px;
+  margin:2px 0 10px;display:flex;align-items:center;gap:10px;text-align:left}
+.tut-guide-note .note-ic{width:26px;height:26px;border-radius:50%;background:var(--t4);color:#fff;flex:none;
+  display:inline-flex;align-items:center;justify-content:center}
+.tut-guide-note p{font-size:13px;font-weight:700;line-height:1.45;color:var(--text)}
+.tut-guide-note b{color:#e85c41}
+
 /* 中央掷骰区 */
 .controls{display:flex;align-items:center;justify-content:center;gap:16px;height:76px;margin:2px 0}
 .bigholder{width:56px;height:56px;position:relative}
@@ -221,7 +252,7 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
   <header>
     <div class="titles">
       <h1>距骨骰</h1>
-      <div class="subtitle">KNUCKLEBONES · 联机版 v1.4.0</div>
+      <div class="subtitle">KNUCKLEBONES · 联机版 v1.4.1</div>
     </div>
     <div class="scores">
       <div class="scorebox"><label id="ratLabel">旅人</label><b id="ratTotal">0</b></div>
@@ -232,7 +263,15 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
   <div class="toolbar">
     <span class="coins"><span class="ici" data-ic="coins"></span><b id="coinNum">30</b></span>
     <span>
-      <button class="iconbtn" id="btnGuide" title="战术指导开关"><span class="ici" id="guideIc"></span></button>
+      <span class="guide-anchor">
+        <button class="iconbtn" id="btnGuide" title="战术指导开关"><span class="ici" id="guideIc"></span></button>
+        <div id="guideTip" class="guide-tip" style="display:none">
+          <div class="gt-arrow"></div>
+          <div class="gt-title"><span class="ici" data-ic="lightbulb"></span> 战术指导已默认开启</div>
+          <div class="gt-text">对局中为你实时提示顶骰与翻倍推荐；若想纯净对弈，可随时点击此按钮关闭。</div>
+          <button class="gt-btn" id="btnGuideTipOk">知道了</button>
+        </div>
+      </span>
       <button class="iconbtn" id="btnTut" title="玩法说明">?</button>
       <button class="iconbtn" id="btnMute" title="音效开关"><span class="ici" id="muteIc"></span></button>
     </span>
@@ -360,6 +399,10 @@ h1{font-size:52px;font-weight:800;line-height:1;color:var(--text);letter-spacing
         <div class="demo"><span class="ici" data-ic="flag"></span></div>
         <p>任意一方<b>九宫格填满</b>时对局结束，<b>总分高者获胜</b>！</p>
       </div>
+    </div>
+    <div class="tut-guide-note">
+      <div class="note-ic"><span class="ici" data-ic="lightbulb"></span></div>
+      <p><b>战术指导已默认开启</b><br>每回合为你推荐顶骰与连乘放法；若想纯净对弈，可随时点击右上角<b>灯泡按钮</b>关闭。</p>
     </div>
     <button class="bigbtn" id="btnTutOk">明白啦！</button>
   </div>
@@ -554,6 +597,22 @@ function quip(t,ms=2400){
 
 /* ================= 局内战术指导与预览 ================= */
 let guideEnabled=localStorage.getItem('kb_guide')!=='0';
+
+function showGuideTip(){
+  if(localStorage.getItem('kb_guide_tip'))return;
+  const tip=$('#guideTip');
+  if(tip){
+    tip.style.display='block';
+    $('#btnGuide').classList.add('guide-pulse');
+  }
+}
+
+function dismissGuideTip(){
+  localStorage.setItem('kb_guide_tip','1');
+  const tip=$('#guideTip');
+  if(tip)tip.style.display='none';
+  $('#btnGuide').classList.remove('guide-pulse');
+}
 
 function clearGuide(){
   document.querySelectorAll('.slot-guide').forEach(el=>el.remove());
@@ -754,6 +813,7 @@ function onColClick(c){
   if(phase!=='placing'||busy)return;
   if(boards.you[c].length>=3){hint('这一列已经满了，换一列吧！');return;}
   busy=true;phase='wait';
+  dismissGuideTip();
   clearGuide();
   const v=die;die=null;
   clearPreview();markClear();
@@ -962,6 +1022,7 @@ async function startGame(){
   updateScores(false);
   document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show'));
   const youFirst=await decideFirst();
+  showGuideTip();
   if(youFirst){quip('好吧，你先。');beginPlayerTurn();}
   else{quip('看我的！');ratTurn();}
 }
@@ -979,6 +1040,7 @@ async function startOnlineGame(){
   updateScores(false);
   document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show'));
   const youFirst=await decideFirst();
+  showGuideTip();
   if(youFirst){hint('你赢了猜拳，你先掷！');beginPlayerTurn();}
   else{hint('对手赢了猜拳，等待对方掷骰…');waitOpponentTurn();}
 }
@@ -1326,6 +1388,7 @@ function syncGuideBtn(){
   }
 }
 gb.addEventListener('click',()=>{
+  dismissGuideTip();
   guideEnabled=!guideEnabled;
   localStorage.setItem('kb_guide',guideEnabled?'1':'0');
   syncGuideBtn();
@@ -1340,6 +1403,9 @@ gb.addEventListener('click',()=>{
   }
 });
 syncGuideBtn();
+
+const bgt=$('#btnGuideTipOk');
+if(bgt)bgt.addEventListener('click',()=>{snd('click');dismissGuideTip();});
 
 function fit(){
   const st=$('#stage');
